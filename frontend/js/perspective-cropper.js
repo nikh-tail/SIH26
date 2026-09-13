@@ -14,6 +14,178 @@ const PerspectiveCropper = {
     isDragging: false,
     onCroppedCallback: null,
 
+    liveAnimFrame: null,
+    isLiveScanning: false,
+
+    // Real-time computer vision perspective detection loop for live camera feed
+    startLivePerspectiveOverlay(videoEl, canvasEl, badgeEl) {
+        if (!videoEl || !canvasEl) return;
+        this.stopLivePerspectiveOverlay();
+        this.isLiveScanning = true;
+
+        const ctx = canvasEl.getContext('2d');
+        const analCanvas = document.createElement('canvas');
+        const analCtx = analCanvas.getContext('2d');
+
+        let pulseAngle = 0;
+
+        const renderLoop = () => {
+            if (!this.isLiveScanning) return;
+
+            if (videoEl.readyState >= 2 && videoEl.videoWidth > 0) {
+                const vw = videoEl.videoWidth;
+                const vh = videoEl.videoHeight;
+
+                if (canvasEl.width !== canvasEl.clientWidth || canvasEl.height !== canvasEl.clientHeight) {
+                    canvasEl.width = canvasEl.clientWidth || vw;
+                    canvasEl.height = canvasEl.clientHeight || vh;
+                }
+
+                const cw = canvasEl.width;
+                const ch = canvasEl.height;
+
+                analCanvas.width = 240;
+                analCanvas.height = Math.round(vh * (240 / vw));
+                analCtx.drawImage(videoEl, 0, 0, analCanvas.width, analCanvas.height);
+
+                // Run fast edge detection on live camera frame
+                const corners = this.detectLabelQuadCornersFromCanvas(analCtx, analCanvas.width, analCanvas.height);
+
+                // Scale detected points to live overlay canvas
+                const scaleX = cw / analCanvas.width;
+                const scaleY = ch / analCanvas.height;
+
+                const livePts = corners.map(pt => ({
+                    x: pt.x * scaleX,
+                    y: pt.y * scaleY
+                }));
+
+                ctx.clearRect(0, 0, cw, ch);
+
+                pulseAngle += 0.08;
+                const glowAlpha = 0.55 + 0.3 * Math.sin(pulseAngle);
+
+                // Draw live quadrilateral overlay fill
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(livePts[0].x, livePts[0].y);
+                ctx.lineTo(livePts[1].x, livePts[1].y);
+                ctx.lineTo(livePts[2].x, livePts[2].y);
+                ctx.lineTo(livePts[3].x, livePts[3].y);
+                ctx.closePath();
+
+                ctx.fillStyle = `rgba(16, 185, 129, ${0.14 * glowAlpha})`;
+                ctx.fill();
+
+                // Animated glowing boundary stroke
+                ctx.strokeStyle = `rgba(16, 185, 129, ${glowAlpha})`;
+                ctx.lineWidth = 3;
+                ctx.setLineDash([10, 6]);
+                ctx.lineDashOffset = -pulseAngle * 12;
+                ctx.stroke();
+                ctx.restore();
+
+                // Corner crosshairs
+                livePts.forEach(pt => {
+                    ctx.beginPath();
+                    ctx.arc(pt.x, pt.y, 11, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(16, 185, 129, 0.25)';
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#10B981';
+                    ctx.fill();
+                    ctx.strokeStyle = '#FFFFFF';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                });
+
+                if (badgeEl) {
+                    badgeEl.style.display = 'block';
+                    badgeEl.innerHTML = `🎯 Live Perspective Detection: <span style="color:#10B981;">ACTIVE</span>`;
+                }
+            }
+
+            this.liveAnimFrame = requestAnimationFrame(renderLoop);
+        };
+
+        this.liveAnimFrame = requestAnimationFrame(renderLoop);
+    },
+
+    stopLivePerspectiveOverlay() {
+        this.isLiveScanning = false;
+        if (this.liveAnimFrame) {
+            cancelAnimationFrame(this.liveAnimFrame);
+            this.liveAnimFrame = null;
+        }
+    },
+
+    detectLabelQuadCornersFromCanvas(ctx, analW, analH) {
+        const imgData = ctx.getImageData(0, 0, analW, analH);
+        const data = imgData.data;
+
+        let topY = Math.round(analH * 0.05);
+        let botY = Math.round(analH * 0.95);
+        let leftX = Math.round(analW * 0.05);
+        let rightX = Math.round(analW * 0.95);
+
+        for (let y = Math.round(analH * 0.02); y < analH * 0.4; y += 2) {
+            let edgeSum = 0;
+            for (let x = Math.round(analW * 0.1); x < analW * 0.9; x += 4) {
+                const idx = (y * analW + x) * 4;
+                const nextIdx = ((y + 2) * analW + x) * 4;
+                const lum1 = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+                const lum2 = 0.299 * data[nextIdx] + 0.587 * data[nextIdx + 1] + 0.114 * data[nextIdx + 2];
+                edgeSum += Math.abs(lum1 - lum2);
+            }
+            if (edgeSum / (analW * 0.2) > 16) { topY = Math.max(0, y - 4); break; }
+        }
+
+        for (let y = Math.round(analH * 0.98); y > analH * 0.6; y -= 2) {
+            let edgeSum = 0;
+            for (let x = Math.round(analW * 0.1); x < analW * 0.9; x += 4) {
+                const idx = (y * analW + x) * 4;
+                const prevIdx = ((y - 2) * analW + x) * 4;
+                const lum1 = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+                const lum2 = 0.299 * data[prevIdx] + 0.587 * data[prevIdx + 1] + 0.114 * data[prevIdx + 2];
+                edgeSum += Math.abs(lum1 - lum2);
+            }
+            if (edgeSum / (analW * 0.2) > 16) { botY = Math.min(analH, y + 4); break; }
+        }
+
+        for (let x = Math.round(analW * 0.02); x < analW * 0.4; x += 2) {
+            let edgeSum = 0;
+            for (let y = Math.round(analH * 0.1); y < analH * 0.9; y += 4) {
+                const idx = (y * analW + x) * 4;
+                const nextIdx = (y * analW + (x + 2)) * 4;
+                const lum1 = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+                const lum2 = 0.299 * data[nextIdx] + 0.587 * data[nextIdx + 1] + 0.114 * data[nextIdx + 2];
+                edgeSum += Math.abs(lum1 - lum2);
+            }
+            if (edgeSum / (analH * 0.2) > 16) { leftX = Math.max(0, x - 4); break; }
+        }
+
+        for (let x = Math.round(analW * 0.98); x > analW * 0.6; x -= 2) {
+            let edgeSum = 0;
+            for (let y = Math.round(analH * 0.1); y < analH * 0.9; y += 4) {
+                const idx = (y * analW + x) * 4;
+                const prevIdx = (y * analW + (x - 2)) * 4;
+                const lum1 = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+                const lum2 = 0.299 * data[prevIdx] + 0.587 * data[prevIdx + 1] + 0.114 * data[prevIdx + 2];
+                edgeSum += Math.abs(lum1 - lum2);
+            }
+            if (edgeSum / (analH * 0.2) > 16) { rightX = Math.min(analW, x + 4); break; }
+        }
+
+        return [
+            { x: leftX, y: topY },
+            { x: rightX, y: topY },
+            { x: rightX, y: botY },
+            { x: leftX, y: botY }
+        ];
+    },
+
     // Fully automatic perspective detection & 4-point homography warp
     async autoWarp(imageSrc) {
         return new Promise((resolve) => {

@@ -103,6 +103,13 @@ function goToStep(step) {
                     labelVideo.srcObject = cameraStream;
                     labelVideo.play().catch(()=>{});
                     if (labelPlaceholder) labelPlaceholder.style.display = 'none';
+
+                    // Activate real-time live perspective detection overlay
+                    if (typeof PerspectiveCropper !== 'undefined' && PerspectiveCropper.startLivePerspectiveOverlay) {
+                        const liveCanvas = document.getElementById('labelLivePerspectiveCanvas');
+                        const badgeEl = document.getElementById('liveEdgeBadge');
+                        PerspectiveCropper.startLivePerspectiveOverlay(labelVideo, liveCanvas, badgeEl);
+                    }
                 }
                 if (video) {
                     video.srcObject = cameraStream;
@@ -112,6 +119,9 @@ function goToStep(step) {
         }
     } else {
         isDetectingBarcode = false;
+        if (typeof PerspectiveCropper !== 'undefined' && PerspectiveCropper.stopLivePerspectiveOverlay) {
+            PerspectiveCropper.stopLivePerspectiveOverlay();
+        }
     }
 }
 
@@ -282,6 +292,9 @@ function captureLabelPhoto() {
         console.warn('[Camera] No active camera stream to capture from');
         alert('Camera is not active. Please use the file upload option below.');
         return;
+    }
+    if (typeof PerspectiveCropper !== 'undefined' && PerspectiveCropper.stopLivePerspectiveOverlay) {
+        PerspectiveCropper.stopLivePerspectiveOverlay();
     }
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth || 1280;
