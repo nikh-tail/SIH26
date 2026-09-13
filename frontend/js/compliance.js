@@ -194,13 +194,13 @@ const ComplianceEngine = {
             return status;
         };
 
-        addRuleCheckDeclaration(ruleChecks.rule_5_standard_pack_size, 'Rule 5', 'Standard Package Size');
+        const rule5Status = addRuleCheckDeclaration(ruleChecks.rule_5_standard_pack_size, 'Rule 5', 'Standard Package Size');
         const rule7Status = addRuleCheckDeclaration(ruleChecks.rule_7_font_size, 'Rule 7', 'Font Size and Proportions');
         const rule8Status = addRuleCheckDeclaration(ruleChecks.rule_8_pdp_and_free_space, 'Rule 8', 'Principal Display Panel and Free Space');
         const rule9Status = addRuleCheckDeclaration(ruleChecks.rule_9_legibility_and_language, 'Rule 9', 'Legibility, Contrast and Language');
         const rule10Status = addRuleCheckDeclaration(ruleChecks.rule_10_postal_address_and_pin, 'Rule 10', 'Full Postal Address and PIN Code');
-        addRuleCheckDeclaration(ruleChecks.rule_12_quantity_expression, 'Rule 12', 'Quantity Expression');
-        addRuleCheckDeclaration(ruleChecks.rule_13_unit_statement, 'Rule 13', 'Statement of Units');
+        const rule12Status = addRuleCheckDeclaration(ruleChecks.rule_12_quantity_expression, 'Rule 12', 'Quantity Expression');
+        const rule13Status = addRuleCheckDeclaration(ruleChecks.rule_13_unit_statement, 'Rule 13', 'Statement of Units');
 
         const additionalRuleViolations = [
             ['Rule 7', rule7Status, 'Font Size or Proportions Non-Compliant', 'Declared text size or character proportions do not meet the visible Rule 7 requirements.'],
@@ -294,6 +294,33 @@ const ComplianceEngine = {
             });
             score -= 15;
         }
+
+        // Every AI rule check affects the score. Image-only checks that cannot
+        // be measured are treated as unresolved risk, never as a pass.
+        [
+            ['Rule 5', rule5Status, 'Standard Package Size Check'],
+            ['Rule 7', rule7Status, 'Font Size and Proportions'],
+            ['Rule 8', rule8Status, 'Principal Display Panel and Free Space'],
+            ['Rule 9', rule9Status, 'Legibility, Contrast and Language'],
+            ['Rule 10', rule10Status, 'Full Postal Address and PIN Code'],
+            ['Rule 12', rule12Status, 'Quantity Expression'],
+            ['Rule 13', rule13Status, 'Statement of Units']
+        ].forEach(([ruleRef, status, ruleName]) => {
+            const hasViolation = violations.some(violation => violation.rule_ref === ruleRef);
+            if (status === 'non_compliant' && !hasViolation) {
+                violations.push({
+                    rule_ref: ruleRef,
+                    rule_name: `${ruleName} Non-Compliant`,
+                    severity: 'critical',
+                    description: `The AI assessment found a failure for ${ruleRef}. Review the evidence shown in the dossier.`,
+                    statutory_act: `Legal Metrology (Packaged Commodities) Rules, 2011 — ${ruleRef}`,
+                    penalty_provision: 'Section 36(1) of Legal Metrology Act, 2009'
+                });
+                score -= 10;
+            } else if (status === 'not_determinable') {
+                score -= 3;
+            }
+        });
 
         // Out of Scope Physical Verification Disclosures (MPE & Dealer Obligations)
         const outOfScopeDisclosures = [

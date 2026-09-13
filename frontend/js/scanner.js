@@ -91,7 +91,7 @@ function goToStep(step) {
         barcodeDetectionLoop();
     } else if (step === 3) {
         isDetectingBarcode = false;
-        if (!scanState.labelImage) {
+        {
             const labelVideo = document.getElementById('labelCameraFeed');
             const labelPlaceholder = document.getElementById('labelCameraPlaceholder');
             const labelContainer = document.getElementById('cameraFeedContainer3');
@@ -108,7 +108,9 @@ function goToStep(step) {
                     if (typeof PerspectiveCropper !== 'undefined' && PerspectiveCropper.startLivePerspectiveOverlay) {
                         const liveCanvas = document.getElementById('labelLivePerspectiveCanvas');
                         const badgeEl = document.getElementById('liveEdgeBadge');
-                        PerspectiveCropper.startLivePerspectiveOverlay(labelVideo, liveCanvas, badgeEl);
+                        if (scanState.labelImages.length < 4) {
+                            PerspectiveCropper.startLivePerspectiveOverlay(labelVideo, liveCanvas, badgeEl);
+                        }
                     }
                 }
                 if (video) {
@@ -319,6 +321,20 @@ function handleFileUpload(e) {
     e.target.value = '';
 }
 
+function restartLabelPerspectiveOverlay() {
+    const labelVideo = document.getElementById('labelCameraFeed');
+    if (!labelVideo || !cameraStream || scanState.labelImages.length >= 4) return;
+    if (typeof PerspectiveCropper === 'undefined' || !PerspectiveCropper.startLivePerspectiveOverlay) return;
+
+    labelVideo.srcObject = cameraStream;
+    labelVideo.play().catch(() => {});
+    PerspectiveCropper.startLivePerspectiveOverlay(
+        labelVideo,
+        document.getElementById('labelLivePerspectiveCanvas'),
+        document.getElementById('liveEdgeBadge')
+    );
+}
+
 function openPerspectiveCropper(dataUrl, callback) {
     const modal = document.getElementById('cropperModal');
     if (!modal || typeof PerspectiveCropper === 'undefined') {
@@ -423,6 +439,7 @@ function commitLabelImage(originalUrl, warpedUrl) {
     if (labelVideo && cameraStream) {
         labelVideo.srcObject = cameraStream;
         labelVideo.play().catch(() => {});
+        restartLabelPerspectiveOverlay();
     }
     if (btnRunAi) { btnRunAi.disabled = false; btnRunAi.style.opacity = '1'; }
     renderLabelPhotoCollection();
@@ -461,6 +478,7 @@ function renderLabelPhotoCollection() {
                 item.warped = newWarpedUrl;
                 scanState.labelImage = scanState.labelImages[0].warped;
                 renderLabelPhotoCollection();
+                restartLabelPerspectiveOverlay();
             });
         };
 
