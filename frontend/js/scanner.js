@@ -603,7 +603,7 @@ async function runMultimodalAnalysis() {
     console.log('[Vision] BACKEND_URL:', CONFIG.BACKEND_URL);
     console.log('[Vision] VISION_PROXY_URL:', CONFIG.VISION_PROXY_URL);
 
-    showLoading('Gemini Vision AI analyzing mandatory declarations & label authenticity...');
+    showLoading('Analyzing mandatory declarations & label authenticity...');
     goToStep(4);
 
     try {
