@@ -4,6 +4,7 @@
   "description": "DoCA Legal Metrology API",
   "main": "api/index.js",
   "scripts": {
+    "build": "echo Backend API has no build step",
     "start": "node api/index.js"
   },
   "dependencies": {
