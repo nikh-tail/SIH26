@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // LEGAL METROLOGY COMPLIANCE & AUTHENTICITY EVALUATION ENGINE
 // (Rules 6, 7, 8, 9 & Label-Identified Fallback Authenticity)
 // ============================================================
@@ -171,6 +171,92 @@ const ComplianceEngine = {
         }
 
         // ------------------------------------------------------------
+        // Rule 12: Prohibited Exaggerating Words Check
+        // ------------------------------------------------------------
+        const labelText = JSON.stringify(visionData).toLowerCase();
+        const prohibitedFound = [];
+        const prohibitedList = (typeof CONFIG !== 'undefined' && CONFIG.PROHIBITED_QUANTITY_WORDS) || ['minimum', 'not less than', 'average', 'about', 'approximately', 'approx'];
+        
+        prohibitedList.forEach(word => {
+            if (labelText.includes(word)) {
+                prohibitedFound.push(word);
+            }
+        });
+
+        if (visionData.rule_text_checks?.exaggerating_words_found || prohibitedFound.length > 0) {
+            const offending = visionData.rule_text_checks?.offending_words || prohibitedFound;
+            violations.push({
+                rule_ref: 'Rule 12',
+                rule_name: 'Prohibited Exaggerating / Vague Words Used',
+                severity: 'critical',
+                description: `Quantity declaration contains prohibited vague/exaggerating terms: "${offending.join(', ')}". Words like "minimum", "not less than", "average", or "approximately" are strictly prohibited.`,
+                statutory_act: 'Legal Metrology Rules, 2011 — Rule 12',
+                penalty_provision: 'Section 36(1) of Legal Metrology Act, 2009 (Penalty up to ₹25,000)'
+            });
+            score -= 20;
+        }
+
+        // ------------------------------------------------------------
+        // Rule 5: Standard Package Size Check (Second Schedule)
+        // ------------------------------------------------------------
+        const category = visionData.classification?.commodity_category;
+        const numVal = visionData.net_quantity?.numeric_val;
+        const packSizes = (typeof CONFIG !== 'undefined' && CONFIG.SECOND_SCHEDULE_PACK_SIZES) || {};
+        
+        if (category && packSizes[category] && numVal) {
+            const isStandard = packSizes[category].includes(numVal);
+            const disclaimerPresent = Boolean(visionData.rule_text_checks?.standard_size_declaration_present);
+            
+            if (!isStandard && !disclaimerPresent) {
+                violations.push({
+                    rule_ref: 'Rule 5',
+                    rule_name: 'Non-Standard Pack Size Without Disclaimer',
+                    severity: 'critical',
+                    description: `Declared quantity (${numVal}g/ml) for "${category}" does not match standard sizes under Second Schedule, and mandatory disclaimer "Not a standard pack size under the Legal Metrology (Packaged Commodities) Rules, 2011" is missing.`,
+                    statutory_act: 'Legal Metrology Rules, 2011 — Rule 5 & Second Schedule',
+                    penalty_provision: 'Section 36(1) of Legal Metrology Act, 2009'
+                });
+                score -= 15;
+            }
+        }
+
+        // ------------------------------------------------------------
+        // Rule 13: Statement of Units & Prohibited Units Check
+        // ------------------------------------------------------------
+        const prohibitedUnits = ['dozen', 'score', 'gross', 'great gross', 'lbs', 'oz', 'inches'];
+        const unitFound = [];
+        prohibitedUnits.forEach(u => {
+            if (labelText.includes(u)) unitFound.push(u);
+        });
+
+        if (visionData.rule_text_checks?.unit_symbol_valid === false || unitFound.length > 0) {
+            const offendingUnits = visionData.rule_text_checks?.prohibited_units_found || unitFound;
+            violations.push({
+                rule_ref: 'Rule 13',
+                rule_name: 'Prohibited / Non-Metric Unit Symbol',
+                severity: 'critical',
+                description: `Quantity is declared using prohibited non-SI units: "${offendingUnits.join(', ')}". Only standard SI metric units (g, kg, ml, l, m, cm) or count symbols "N"/"U" are permitted.`,
+                statutory_act: 'Legal Metrology Rules, 2011 — Rule 13',
+                penalty_provision: 'Section 36(1) of Legal Metrology Act, 2009'
+            });
+            score -= 15;
+        }
+
+        // Out of Scope Physical Verification Disclosures (MPE & Dealer Obligations)
+        const outOfScopeDisclosures = [
+            {
+                rule_ref: 'First Schedule & Rules 19–22',
+                topic: 'Maximum Permissible Error (MPE)',
+                notice: 'Requires physical laboratory sampling, weighing, and volume calibration — cannot be verified from image alone.'
+            },
+            {
+                rule_ref: 'Rule 18',
+                topic: 'Dealer & Retailer Obligations',
+                notice: 'Verifying retail sale price limits, obliteration of MRP, and maintenance of Class III electronic weighing scale requires physical store enforcement inspection.'
+            }
+        ];
+
+        // ------------------------------------------------------------
         // 2. Authenticity & Solid Proof Cross-Check
         // ------------------------------------------------------------
         let authenticityStatus = 'AUTHENTIC';
@@ -237,6 +323,7 @@ const ComplianceEngine = {
             authenticity_remarks: authenticityRemarks,
             declarations: declarations,
             violations: violations,
+            out_of_scope_disclosures: outOfScopeDisclosures,
             has_barcode: hasBarcode,
             verification_proof: barcodeData?.proofSummary || 'Label-based statutory audit'
         };

@@ -1,4 +1,4 @@
-﻿const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const SUPPORTED_MODELS = [
     'gemini-3-flash-preview',
     'gemini-3.1-flash-lite',
@@ -62,21 +62,68 @@ module.exports = async (req, res) => {
         });
 
         const promptText = `You are an expert Legal Metrology Enforcement Inspector for the Department of Consumer Affairs (DoCA), Government of India.
-Examine all supplied photos of the same packaged commodity. Combine evidence across photos and match them as one product. When no barcode is provided, identify the product from visible brand marks, packaging text, product appearance, and consistent declarations across the photos; report conflicts instead of using defaults. Perform two simultaneous tasks:
-1. Extract every mandatory declaration under Rule 6, 7, 8, 9 of the Legal Metrology (Packaged Commodities) Rules, 2011.
-2. If NO barcode is visible or provided, perform LABEL-BASED AUTHENTICITY AUDIT by extracting FSSAI license number (14 digits), manufacturer postal PIN code (6 digits), registered trademark symbols, and consumer grievance contact cell.
+You analyze photographs of packaged commodity labels under India's Legal Metrology (Packaged Commodities) Rules, 2011. You have complete knowledge of the rule text. Apply it precisely — do not invent requirements not stated here, and do not silently skip a check; if something cannot be determined from the image alone, state so explicitly.
 
-Return ONLY a valid, raw JSON object (without markdown fences, raw JSON only).
-JSON Schema:
+===========================================================================
+LEGAL METROLOGY (PACKAGED COMMODITIES) RULES, 2011 REFERENCE
+===========================================================================
+- Rule 2 Definitions: Net quantity (excluding packaging weight), Retail Sale Price / MRP ("Maximum or Max. retail price Rs.../₹... inclusive of all taxes"), Principal Display Panel (PDP).
+- Rule 3 Applicability: Excludes >25kg or >25L packages (except cement/fertilizer up to 50kg) and industrial/institutional packs.
+- Rule 4 Pre-packing: Must have secure declarations.
+- Rule 5 Standard Package Sizes (Second Schedule): Commodities in Second Schedule must be packed in standard quantities. If non-standard size, label must declare: "Not a standard pack size under the Legal Metrology (Packaged Commodities) Rules, 2011".
+- Rule 6 Mandatory Declarations:
+  (a) Manufacturer/Packer/Importer Name & Address
+  (b) Common/Generic Name of Commodity
+  (c) Net Quantity in standard SI metric unit or count
+  (d) Month & Year of manufacture/packing/import
+  (e) MRP in INR inclusive of all taxes
+  (f) Dimensions of commodity if relevant
+  (g) Consumer Care Contact: Name, address, telephone number, email
+- Rule 7 PDP & Font Sizes: Letter/numeral height thresholds (≥1mm/2mm/4mm/6mm) and width ≥1/3 height.
+- Rule 8 PDP Placement & Surrounding Free Space around Net Qty.
+- Rule 9 Manner of Declaration: Legibility, color contrast against background, Hindi (Devanagari) or English.
+- Rule 10 Full Postal Address with PIN Code.
+- Rule 12 Manner of Expressing Quantity. PROHIBITED WORDS: "minimum", "not less than", "average", "about", "approximately", "approx".
+- Rule 13 Statement of Units. PROHIBITED UNITS: "dozen", "score", "gross", "lbs", "oz". Use SI metric symbols or count "N"/"U".
+- Rules 19-22 & First Schedule (MPE): Maximum Permissible Error requires physical sampling and weighing — CANNOT be assessed from a photograph alone.
+- Rule 18 Dealer Obligations: Selling above MRP, scale maintenance — requires physical inspection.
+
+===========================================================================
+TASK: RETURN ONLY A RAW VALID JSON OBJECT WITH THIS EXACT SCHEMA:
+===========================================================================
 {
   "product_name": { "value": "string or null", "present": true, "confidence": 0.95 },
   "manufacturer_name": { "value": "string or null", "present": true, "confidence": 0.90 },
   "manufacturer_address": { "value": "string or null", "present": true, "confidence": 0.88, "pin_code": "6-digit string or null" },
-  "fssai_license": { "value": "14-digit string or null", "present": true/false },
-  "net_quantity": { "value": "500g", "present": true, "confidence": 0.94 },
+  "packer_name_address": { "value": "string or null", "present": true },
+  "importer_name_address": { "value": "string or null", "present": true },
+  "generic_name": { "value": "string or null", "present": true },
+  "country_of_origin": { "value": "string or null", "present": true },
+  "fssai_license": { "value": "14-digit string or null", "present": true },
+  "net_quantity": { "value": "500 g", "numeric_val": 500, "unit": "g", "present": true, "confidence": 0.94 },
   "mfg_date": { "value": "08/2026", "present": true, "confidence": 0.90 },
-  "mrp": { "value": "Rs. 140.00 (incl. of all taxes)", "present": true, "confidence": 0.95, "has_tax_inclusion_statement": true },
-  "consumer_care": { "value": "1800-11-4000 / care@doca.gov.in", "present": true }
+  "mrp": { "value": "Rs. 140.00 (incl. of all taxes)", "numeric_val": 140.00, "present": true, "has_tax_inclusion_statement": true },
+  "consumer_care": { "value": "1800-11-4000 / care@doca.gov.in", "present": true },
+  "dimensions": { "value": "string or null", "present": true },
+
+  "classification": {
+    "commodity_category": "Biscuits | Bread | Butter/margarine | Cereals & pulses | Coffee | Tea | Edible oils/vanaspati/ghee | Milk powder | Rice/flour/atta/rawa/suji | Salt | Toilet soap | Laundry soap | Cement | Aerated soft drinks | Mineral/drinking water | other_unclassified",
+    "unit_type": "mass | volume | length | area | number",
+    "classification_confidence": 0.95
+  },
+
+  "rule_text_checks": {
+    "exaggerating_words_found": false,
+    "offending_words": [],
+    "standard_size_declaration_present": false,
+    "mrp_rounding_valid": true,
+    "unit_symbol_valid": true,
+    "prohibited_units_found": [],
+    "out_of_scope_checks": [
+      "MPE (Maximum Permissible Error) under Rules 19-22 & First Schedule requires physical laboratory weighing/measuring — cannot be assessed from image alone.",
+      "Rule 18 Dealer Obligations (over-charging above MRP, obliteration of MRP, Class III scale maintenance) — requires physical enforcement inspection."
+    ]
+  }
 }`;
 
         // Fallback models in case primary model is unavailable or 404

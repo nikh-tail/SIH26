@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // CONFIGURATION — Legal Metrology Compliance Checker (Frontend)
 // Problem Statement: SIH26034 (DoCA / MoCA)
 // Standard Vite Environment Variables (import.meta.env)
@@ -121,6 +121,21 @@ const CONFIG = {
             { max_sqcm: 500, min_numeral_mm: 4.0 },
             { max_sqcm: Infinity, min_numeral_mm: 6.0 }
         ]
+    },
+
+    // Rule 12 Prohibited Exaggerating Words
+    PROHIBITED_QUANTITY_WORDS: [
+        'minimum', 'not less than', 'average', 'about', 'approximately', 'approx', 'approx.'
+    ],
+
+    // Second Schedule Standard Pack Quantities (Rule 5)
+    SECOND_SCHEDULE_PACK_SIZES: {
+        'Biscuits': [25, 50, 75, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000],
+        'Bread': [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000],
+        'Tea': [25, 50, 75, 100, 125, 150, 200, 250, 500, 1000],
+        'Coffee': [25, 50, 75, 100, 150, 200, 250, 500, 1000],
+        'Toilet soap': [25, 50, 75, 100, 125, 150, 200, 250, 300, 350, 400, 450, 500],
+        'Laundry soap': [50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500]
     }
 };
 
