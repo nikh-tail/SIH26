@@ -171,6 +171,59 @@ const ComplianceEngine = {
         }
 
         // ------------------------------------------------------------
+        // Additional rule checks returned by the AI
+        // ------------------------------------------------------------
+        const ruleChecks = visionData.rule_text_checks?.rule_checks || {};
+        const addRuleCheckDeclaration = (check, ruleRef, name, defaultStatus = 'not_determinable') => {
+            const status = check?.status || defaultStatus;
+            const declarationStatus = status === 'compliant'
+                ? 'compliant'
+                : (status === 'non_compliant' ? 'violation' : 'warning');
+
+            declarations.push({
+                rule_ref: ruleRef,
+                name,
+                value: check?.evidence || (status === 'not_determinable' ? 'Cannot be determined from image alone' : status),
+                status: declarationStatus,
+                present: status !== 'not_determinable',
+                compliant: status === 'compliant',
+                confidence: check?.confidence || 0,
+                notes: check?.evidence || 'AI rule assessment'
+            });
+
+            return status;
+        };
+
+        addRuleCheckDeclaration(ruleChecks.rule_5_standard_pack_size, 'Rule 5', 'Standard Package Size');
+        const rule7Status = addRuleCheckDeclaration(ruleChecks.rule_7_font_size, 'Rule 7', 'Font Size and Proportions');
+        const rule8Status = addRuleCheckDeclaration(ruleChecks.rule_8_pdp_and_free_space, 'Rule 8', 'Principal Display Panel and Free Space');
+        const rule9Status = addRuleCheckDeclaration(ruleChecks.rule_9_legibility_and_language, 'Rule 9', 'Legibility, Contrast and Language');
+        const rule10Status = addRuleCheckDeclaration(ruleChecks.rule_10_postal_address_and_pin, 'Rule 10', 'Full Postal Address and PIN Code');
+        addRuleCheckDeclaration(ruleChecks.rule_12_quantity_expression, 'Rule 12', 'Quantity Expression');
+        addRuleCheckDeclaration(ruleChecks.rule_13_unit_statement, 'Rule 13', 'Statement of Units');
+
+        const additionalRuleViolations = [
+            ['Rule 7', rule7Status, 'Font Size or Proportions Non-Compliant', 'Declared text size or character proportions do not meet the visible Rule 7 requirements.'],
+            ['Rule 8', rule8Status, 'Principal Display Panel or Free Space Non-Compliant', 'The principal display panel placement or required free space around net quantity is non-compliant.'],
+            ['Rule 9', rule9Status, 'Legibility, Contrast or Language Non-Compliant', 'One or more declarations are not legible, sufficiently contrasted, or in an allowed language.'],
+            ['Rule 10', rule10Status, 'Incomplete Postal Address or PIN Code', 'The package does not show a complete postal address with a valid six-digit PIN code.']
+        ];
+
+        additionalRuleViolations.forEach(([ruleRef, status, ruleName, description]) => {
+            if (status === 'non_compliant') {
+                violations.push({
+                    rule_ref: ruleRef,
+                    rule_name: ruleName,
+                    severity: 'critical',
+                    description,
+                    statutory_act: `Legal Metrology (Packaged Commodities) Rules, 2011 — ${ruleRef}`,
+                    penalty_provision: 'Section 36(1) of Legal Metrology Act, 2009'
+                });
+                score -= 10;
+            }
+        });
+
+        // ------------------------------------------------------------
         // Rule 12: Prohibited Exaggerating Words Check
         // ------------------------------------------------------------
         const labelText = JSON.stringify(visionData).toLowerCase();
@@ -255,6 +308,19 @@ const ComplianceEngine = {
                 notice: 'Verifying retail sale price limits, obliteration of MRP, and maintenance of Class III electronic weighing scale requires physical store enforcement inspection.'
             }
         ];
+
+        outOfScopeDisclosures.forEach(disclosure => {
+            declarations.push({
+                rule_ref: disclosure.rule_ref,
+                name: disclosure.topic,
+                value: 'Not determinable from image alone',
+                status: 'warning',
+                present: false,
+                compliant: false,
+                confidence: 0,
+                notes: disclosure.notice
+            });
+        });
 
         // ------------------------------------------------------------
         // 2. Authenticity & Solid Proof Cross-Check

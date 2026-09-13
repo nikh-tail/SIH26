@@ -167,7 +167,7 @@ const DB = {
                         scan_id: scanId,
                         declaration_type: d.declaration_type || d.rule_ref || 'unknown',
                         label: d.label || d.name || 'Declaration',
-                        rule_reference: d.rule_reference || d.rule_ref || 'Rule 6',
+                        rule_reference: d.rule_reference || d.rule_ref || 'Unclassified Check',
                         value_extracted: d.value_extracted ?? d.value ?? null,
                         confidence: Number(d.confidence || 0),
                         present: Boolean(d.present),

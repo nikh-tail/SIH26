@@ -117,7 +117,7 @@ function renderDeclarationsTable(declarations) {
 
         tr.innerHTML = `
             <td><strong>${d.label || d.declaration_type}</strong></td>
-            <td><code>${d.rule_reference || 'Rule 6'}</code></td>
+            <td><code>${d.rule_reference || 'Unclassified Check'}</code></td>
             <td>${d.value_extracted ? `<strong>"${d.value_extracted}"</strong>` : '<em class="text-danger">Missing / Not Found</em>'}</td>
             <td>${fontDisplay}</td>
             <td>${statusBadge}</td>

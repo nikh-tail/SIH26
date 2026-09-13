@@ -119,6 +119,15 @@ TASK: RETURN ONLY A RAW VALID JSON OBJECT WITH THIS EXACT SCHEMA:
     "mrp_rounding_valid": true,
     "unit_symbol_valid": true,
     "prohibited_units_found": [],
+        "rule_checks": {
+            "rule_5_standard_pack_size": { "status": "compliant | non_compliant | not_applicable | not_determinable", "evidence": "string" },
+            "rule_7_font_size": { "status": "compliant | non_compliant | not_determinable", "evidence": "string" },
+            "rule_8_pdp_and_free_space": { "status": "compliant | non_compliant | not_determinable", "evidence": "string" },
+            "rule_9_legibility_and_language": { "status": "compliant | non_compliant | not_determinable", "evidence": "string" },
+            "rule_10_postal_address_and_pin": { "status": "compliant | non_compliant", "evidence": "string" },
+            "rule_12_quantity_expression": { "status": "compliant | non_compliant", "evidence": "string" },
+            "rule_13_unit_statement": { "status": "compliant | non_compliant", "evidence": "string" }
+        },
     "out_of_scope_checks": [
       "MPE (Maximum Permissible Error) under Rules 19-22 & First Schedule requires physical laboratory weighing/measuring — cannot be assessed from image alone.",
       "Rule 18 Dealer Obligations (over-charging above MRP, obliteration of MRP, Class III scale maintenance) — requires physical enforcement inspection."
