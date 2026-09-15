@@ -79,23 +79,42 @@
             </div>
         </a>
         <div class="header-right">
-            <button type="button" id="btnGenerateNotice" class="btn btn-primary btn-sm">
+            <button type="button" id="btnExportDossierCsv" class="btn btn-secondary-dark btn-sm btn-hide-mobile">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                Export CSV
+            </button>
+            <button type="button" id="btnGenerateNotice" class="btn btn-primary btn-sm btn-hide-mobile">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>
                 Legal Notice
             </button>
-            <button type="button" id="btnPrintReport" class="btn btn-secondary-dark btn-sm">
+            <button type="button" id="btnPrintReport" class="btn btn-secondary-dark btn-sm btn-hide-mobile">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
-                Print / Export
+                Print
             </button>
             <a href="dashboard.html" class="btn btn-secondary-dark btn-sm">
-                Dashboard
+                ← Dashboard
             </a>
         </div>
     </header>
 
     <main class="container">
         <!-- Official Government Dossier Card -->
-        <div class="card" style="padding: 36px; border: 2px solid #CBD5E1; box-shadow: var(--shadow-md);">
+        <div class="card dossier-card" style="border: 2px solid #CBD5E1; box-shadow: var(--shadow-md);">
+            <!-- Mobile & Quick Actions Bar -->
+            <div class="dossier-actions-bar no-print" style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
+                <button type="button" id="btnExportDossierCsvMobile" class="btn btn-secondary-light btn-sm" style="flex: 1; min-height: 48px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                    Export CSV
+                </button>
+                <button type="button" id="btnGenerateNoticeMobile" class="btn btn-primary btn-sm" style="flex: 1; min-height: 48px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>
+                    Legal Notice
+                </button>
+                <button type="button" id="btnPrintReportMobile" class="btn btn-secondary-light btn-sm" style="flex: 1; min-height: 48px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                    Print Dossier
+                </button>
+            </div>
             
             <!-- Official Seal & Header -->
             <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--primary-navy); padding-bottom: 20px; margin-bottom: 24px; flex-wrap: wrap; gap: 20px;">
@@ -229,9 +248,22 @@
                 </table>
             </div>
 
-            <!-- SECTION 3: STATUTORY VIOLATIONS & PENAL PROVISIONS -->
+            <!-- SECTION 3: COMPLIANCE BREAKDOWN (PIE CHARTS) -->
             <div class="report-section-title">
-                3. Statutory Violations & Penal Provisions (If Any)
+                3. Compliance Breakdown
+            </div>
+            <div id="complianceBreakdownContainer" class="compliance-breakdown-wrapper">
+                <div class="charts-grid">
+                    <div id="compliantChartCard" class="chart-card"></div>
+                    <div id="violationsChartCard" class="chart-card"></div>
+                </div>
+                <div id="notApplicableRulesNote" class="chart-subnote not-applicable-note" style="display: none;"></div>
+                <div id="cumulativePenaltyNote" class="chart-subnote cumulative-penalty-note" style="display: none;"></div>
+            </div>
+
+            <!-- SECTION 4: STATUTORY VIOLATIONS & PENAL PROVISIONS -->
+            <div class="report-section-title">
+                4. Statutory Violations & Penal Provisions (If Any)
             </div>
             <div id="violationsDossierList" style="margin-bottom: 24px;">
                 <!-- Dynamic violation cards -->
@@ -241,9 +273,9 @@
                 <strong>✓ Zero Non-Compliance:</strong> All mandatory declarations strictly comply with Rule 6, 7, 8, and 9 of the Legal Metrology (Packaged Commodities) Rules, 2011.
             </div>
 
-            <!-- SECTION 4: VISUAL EVIDENCE ATTACHMENT -->
+            <!-- SECTION 5: VISUAL EVIDENCE ATTACHMENT -->
             <div class="report-section-title">
-                4. Visual Evidence Photo Attachment
+                5. Visual Evidence Photo Attachment
             </div>
             <div class="evidence-img-container" style="margin-bottom: 28px;">
                 <img id="evidenceLabelImage" class="evidence-img" style="display: none;" alt="Scanned Label Evidence">
@@ -252,9 +284,9 @@
                 </div>
             </div>
 
-            <!-- SECTION 5: OUT-OF-SCOPE PHYSICAL VERIFICATION DISCLOSURES -->
+            <!-- SECTION 6: OUT-OF-SCOPE PHYSICAL VERIFICATION DISCLOSURES -->
             <div class="report-section-title">
-                5. Out-of-Scope Physical Verification Disclosures (First Schedule MPE & Rule 18)
+                6. Out-of-Scope Physical Verification Disclosures (First Schedule MPE & Rule 18)
             </div>
             <div style="background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: var(--radius-sm); padding: 16px; margin-bottom: 28px;">
                 <div style="font-size: 0.88rem; color: #334155; margin-bottom: 10px;">
@@ -307,6 +339,6 @@
 
         <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
-    <script src="js/report.js"></script>
+    <script type="module" src="js/report.js"></script>
 </body>
 </html>

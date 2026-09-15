@@ -955,5 +955,287 @@ img, svg, video {
         line-height: 1.4 !important;
         margin-bottom: 6px !important;
     }
+
+    /* Dossier card & header mobile containment */
+    .dossier-card,
+    .card {
+        padding: 16px !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    .btn-hide-mobile {
+        display: none !important;
+    }
 }
+
+@media (min-width: 769px) {
+    .dossier-actions-bar {
+        display: none !important;
+    }
+}
+
+/* ============================================================
+   COMPLIANCE BREAKDOWN PIE CHARTS & LEGEND SYSTEM
+   ============================================================ */
+
+:root {
+    --chart-card-bg: #FFFFFF;
+    --chart-gap: 16px;
+}
+
+.compliance-breakdown-wrapper {
+    width: 100%;
+    overflow-x: hidden;
+    margin-bottom: 28px;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    width: 100%;
+    margin-bottom: 14px;
+}
+
+@media (min-width: 600px) {
+    .charts-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+}
+
+.chart-card {
+    background: var(--surface-white, #FFFFFF);
+    border: 1px solid var(--border-color, #E2E8F0);
+    border-radius: var(--radius-card, 12px);
+    padding: 20px 16px;
+    box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.05));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.chart-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--primary-navy, #0B2545);
+    margin: 0 0 14px 0;
+    text-align: center;
+    letter-spacing: -0.01em;
+    width: 100%;
+}
+
+.compliance-pie-chart {
+    max-width: 220px;
+    width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    overflow: visible;
+}
+
+.chart-slice {
+    cursor: pointer;
+    outline: none;
+    transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1), stroke 150ms ease, stroke-width 150ms ease;
+    transform-origin: 110px 110px;
+}
+
+.chart-slice:hover,
+.chart-slice:focus-visible {
+    filter: brightness(1.1);
+    stroke: #FFFFFF !important;
+    stroke-width: 2px !important;
+}
+
+.chart-slice.is-active {
+    stroke: #FFFFFF !important;
+    stroke-width: 2.5px !important;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+}
+
+@keyframes sliceMountSweep {
+    from {
+        opacity: 0;
+        transform: scale(0.86);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.chart-slice-mount {
+    animation: sliceMountSweep 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    transform-origin: 110px 110px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chart-slice-mount {
+        animation: none !important;
+    }
+    .chart-slice {
+        transition: none !important;
+    }
+}
+
+.chart-center-count {
+    font-family: inherit;
+    font-feature-settings: "tnum";
+}
+
+.chart-center-label {
+    text-transform: uppercase;
+}
+
+.chart-empty-message {
+    margin-top: 14px;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #64748B);
+    text-align: center;
+    font-style: italic;
+}
+
+/* Sibling Legend (<ul>) */
+.chart-legend {
+    list-style: none;
+    padding: 0;
+    margin: 16px 0 0 0;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    box-sizing: border-box;
+}
+
+@media (min-width: 380px) {
+    .chart-legend {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.chart-legend-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 48px; /* Strict >=48px touch target */
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.02);
+    border: 1px solid var(--border-color, #E2E8F0);
+    border-radius: var(--radius-sm, 8px);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+    box-sizing: border-box;
+}
+
+.chart-legend-btn:hover,
+.chart-legend-btn:focus-visible {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: #CBD5E1;
+    transform: translateY(-1px);
+}
+
+.chart-legend-btn.is-active {
+    border-color: var(--primary-navy, #0B2545) !important;
+    background: rgba(11, 37, 69, 0.07) !important;
+    box-shadow: 0 0 0 2px var(--primary-navy, #0B2545);
+}
+
+.chart-legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    display: inline-block;
+}
+
+.chart-legend-label {
+    flex: 1;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary, #0F172A);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chart-legend-value {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary, #64748B);
+    font-family: monospace;
+}
+
+/* Subnotes below charts */
+.chart-subnote {
+    font-size: 0.85rem;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm, 8px);
+    margin-top: 8px;
+    box-sizing: border-box;
+}
+
+.cumulative-penalty-note {
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: #991B1B;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.not-applicable-note {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    color: #64748B;
+    font-size: 0.82rem;
+}
+
+/* Violation Card & Declaration Row Flash */
+@keyframes ruleBorderFlash {
+    0% {
+        outline: 2px solid var(--flash-color, #2563EB);
+        box-shadow: 0 0 14px var(--flash-color, #2563EB);
+    }
+    70% {
+        outline: 2px solid var(--flash-color, #2563EB);
+        box-shadow: 0 0 6px var(--flash-color, #2563EB);
+    }
+    100% {
+        outline: 2px solid transparent;
+        box-shadow: none;
+    }
+}
+
+.rule-highlight-flash {
+    animation: ruleBorderFlash 1.2s ease-out forwards !important;
+}
+
+/* Print Optimization */
+@media print {
+    .charts-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 16px !important;
+        page-break-inside: avoid !important;
+    }
+    .chart-card {
+        break-inside: avoid !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    .chart-legend-btn {
+        min-height: 36px !important;
+    }
+}
+
 
