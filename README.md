@@ -1,36 +1,54 @@
-﻿# AI-Powered Legal Metrology Compliance & Authenticity Checker
-### Smart India Hackathon 2026 | Problem Statement ID: SIH26034
-**Organization:** Ministry of Consumer Affairs, Food & Public Distribution  
-**Department:** Department of Consumer Affairs (DoCA)  
-**Theme / Category:** Miscellaneous / Software  
+# AI-Powered Legal Metrology Compliance Checker — Frontend
+### Smart India Hackathon 2026 | Problem Statement: SIH26034
+**Department of Consumer Affairs (DoCA), Ministry of Consumer Affairs, Food & Public Distribution**
+
+Dedicated, mobile-first frontend application for statutory verification of packaged commodities under the Legal Metrology Act, 2009 and Packaged Commodities Rules, 2011.
 
 ---
 
-## 🚀 Instant Deployment Options
+## 📱 Features
 
-### Option 1: Vercel (Recommended - 1 Click)
-1. Install Vercel CLI: `npm i -g vercel`
-2. Run in this directory:
-   ```bash
-   vercel --prod
-   ```
-   Or push to GitHub and import the repository on [vercel.com](https://vercel.com).
+- **Mobile-First Design System**: Optimized and tested for 320px to 430px viewports with zero horizontal overflow.
+- **56px Compact Sticky Header**: Bilingual title stack (Hindi / English), Ashok Chakra emblem, and quick navigation.
+- **5-Step Inspection Workflow**:
+  1. Live Camera Barcode Capture & GTIN Check-Digit Validation
+  2. Barcode Registry Data Verification
+  3. Multimodal PDP Capture & Rule 7 Font Calibration
+  4. Real-time Gemini Vision OCR & Compliance Audit
+  5. Official Statutory Inspection Report Generation & Export
+- **Modern Standards**: Accessible 48px touch targets, SVG icons, and clean state cards.
 
-### Option 2: Netlify (Drag & Drop or CLI)
-1. Go to [app.netlify.com/drop](https://app.netlify.com/drop)
-2. Drag and drop this folder (`c:\Users\LENOVO\Desktop\SIH26`) directly into the browser.
-3. Your app will be live on a public `*.netlify.app` URL in 5 seconds!
+---
 
-### Option 3: GitHub Pages
-1. Create a repository on GitHub (e.g. `sih26-legal-metrology-checker`).
-2. Run:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit - SIH26034 Legal Metrology Checker"
-   git branch -M main
-   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
-   git push -u origin main
-   ```
-3. Go to **Settings** → **Pages** → Source: **Deploy from branch `main`** → Save.
-4. Your app will be live at `https://YOUR_USERNAME.github.io/YOUR_REPO/`.
+## 🛠️ Local Development
+
+### Prerequisites
+- Node.js (v18+)
+- npm
+
+### Installation & Run
+```bash
+# Install dependencies
+npm install
+
+# Start local development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+---
+
+## 🚀 Deployment
+
+### Vercel (Static Site)
+This branch is structured for direct root deployment to Vercel:
+- **Framework Preset**: `Vite`
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Install Command**: `npm install`
+
