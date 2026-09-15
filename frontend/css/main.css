@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    LEGAL METROLOGY COMPLIANCE CHECKER — MAIN STYLESHEET
    Department of Consumer Affairs (DoCA), Government of India
    ============================================================ */
@@ -48,6 +48,12 @@ body {
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
 }
+
+p {
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+
 
 /* Tricolor Top Bar Accent */
 .national-accent-bar {
@@ -214,7 +220,10 @@ body {
 .badge {
     display: inline-flex;
     align-items: center;
-    padding: 4px 10px;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.2;
+    padding: 4px 12px;
     font-size: 0.78rem;
     font-weight: 700;
     border-radius: 12px;
@@ -390,3 +399,221 @@ body {
         page-break-inside: avoid;
     }
 }
+
+/* ============================================================
+   MOBILE RESPONSIVE ENHANCEMENTS (max-width: 768px)
+   ============================================================ */
+@media (max-width: 768px) {
+    /* 1. Ultra-Compact Header Layout & Alignment */
+    .app-header {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 8px 12px !important;
+        gap: 6px 10px !important;
+        min-height: auto !important;
+    }
+
+    .brand-container {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        max-width: calc(100% - 110px) !important;
+    }
+
+    .emblem-img {
+        height: 28px !important;
+        width: 28px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .brand-title {
+        font-size: 0.82rem !important;
+        font-weight: 700 !important;
+        line-height: 1.15 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .brand-subtitle {
+        display: none !important; /* Hide verbose subtitle to prevent massive height */
+    }
+
+    /* Right-side user badge / action buttons */
+    .user-badge-header {
+        display: contents !important; /* Emits children into the header flex grid */
+    }
+
+    /* Top right compact action button */
+    .app-header .btn,
+    .user-badge-header .btn {
+        width: auto !important;
+        min-height: 32px !important;
+        max-height: 34px !important;
+        padding: 5px 10px !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        border-radius: 6px !important;
+        margin: 0 !important;
+        flex: 0 0 auto !important;
+        white-space: nowrap !important;
+    }
+
+    /* Officer pill becomes a compact sub-bar spanning full width */
+    .officer-pill {
+        order: 99 !important;
+        width: 100% !important;
+        background: rgba(255, 255, 255, 0.08) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-radius: 4px !important;
+        padding: 3px 8px !important;
+        font-size: 0.72rem !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        color: #93C5FD !important;
+        margin-top: 2px !important;
+    }
+
+    #userRoleBadge {
+        display: none !important; /* Hide redundant role badge in compact mobile header */
+    }
+
+    /* Container Spacing */
+    .container, .container-narrow {
+        padding: 10px 12px 24px 12px !important;
+    }
+
+    /* 2. Typography */
+    h1, .hero-title, .card h1 {
+        font-size: 22px !important;
+        line-height: 1.25 !important;
+    }
+
+    p, .text-secondary {
+        line-height: 1.45 !important;
+        margin-bottom: 12px !important;
+    }
+
+    /* 4. Cards */
+    .card {
+        border: 1px solid #E5E7EB !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+        padding: 16px 14px !important;
+        margin-bottom: 12px !important;
+        border-radius: 8px !important;
+    }
+
+    .hero-card {
+        padding: 18px 14px !important;
+        margin-top: 4px !important;
+    }
+
+    /* 5. Badges & Floating Elements */
+    .card-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+        padding-bottom: 8px !important;
+        margin-bottom: 12px !important;
+    }
+
+    .card-title {
+        font-size: 1.05rem !important;
+        line-height: 1.3 !important;
+    }
+
+    .card-header .badge,
+    .card-header #cameraStatus,
+    .badge-officer,
+    .badge-admin {
+        align-self: flex-start !important;
+        margin-top: 2px;
+        float: none !important;
+    }
+
+    #cameraStatus {
+        width: 100% !important;
+    }
+
+    /* 6. Buttons & Stacked Action Containers */
+    .btn-stack-mobile,
+    .hero-actions,
+    .card-actions,
+    .wizard-actions,
+    .step-actions {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 10px !important;
+    }
+
+    .btn {
+        width: 100% !important;
+        min-height: 44px !important;
+        margin-bottom: 10px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        font-size: 0.92rem !important;
+        padding: 8px 14px !important;
+        border-radius: 8px !important;
+    }
+
+    .btn:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    /* 7. Tags & Small Status Tags */
+    .badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        padding: 3px 10px !important;
+        font-size: 0.72rem !important;
+        line-height: 1.2 !important;
+    }
+
+    /* 10. Form Controls & Touch Targets */
+    .form-control {
+        min-height: 44px !important;
+        font-size: 16px !important;
+        padding: 8px 12px !important;
+    }
+
+    .search-filter-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+
+    .card-header-actions {
+        width: 100% !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    /* Footer text contrast */
+    footer {
+        padding: 16px 12px !important;
+        color: #E2E8F0 !important;
+        margin-top: 24px !important;
+    }
+
+    footer p {
+        color: #E2E8F0 !important;
+        font-size: 0.8rem !important;
+        line-height: 1.4 !important;
+        margin-bottom: 6px !important;
+    }
+
+    footer p:last-child {
+        margin-bottom: 0 !important;
+    }
+}
+

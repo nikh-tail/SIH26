@@ -92,7 +92,7 @@
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
+                <div class="step-actions" style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
                     <button type="button" id="btnManualBarcode" class="btn btn-primary">
                         ⌨️ Enter Barcode Manually
                     </button>
@@ -118,13 +118,13 @@
                 </div>
 
                 <div style="background: #F8FAFC; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 24px; margin-bottom: 24px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                    <div class="barcode-details-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
                         <div>
                             <div class="text-muted small">Scanned Barcode (GTIN)</div>
                             <h3 id="displayBarcode" style="font-family: monospace; font-size: 1.5rem; color: var(--primary-navy);">8901030383854</h3>
                             <div id="displayBarcodeType" class="text-muted small">EAN-13 (GS1 India)</div>
                         </div>
-                        <div style="display: flex; gap: 8px;">
+                        <div class="barcode-tags-container" style="display: flex; gap: 8px;">
                             <span id="badgeCheckDigit" class="badge badge-success">✓ Check-Digit Valid</span>
                             <span id="badgeRegistry" class="badge badge-success">✓ Registered in Database</span>
                         </div>
@@ -157,7 +157,7 @@
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <div class="step-actions" style="display: flex; justify-content: flex-end; gap: 12px;">
                     <button type="button" onclick="goToStep(1)" class="btn btn-outline-primary">
                         ← Rescan Barcode
                     </button>
@@ -197,7 +197,7 @@
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: center; gap: 14px; margin-bottom: 20px; flex-wrap: wrap;">
+                <div class="step-actions" style="display: flex; justify-content: center; gap: 14px; margin-bottom: 20px; flex-wrap: wrap;">
                     <button type="button" id="btnCaptureLabel" class="btn btn-warning btn-lg">
                         📸 Take Label Snapshot
                     </button>
@@ -225,7 +225,7 @@
                     <p class="text-secondary" style="font-size: 0.85rem; margin-bottom: 12px;">
                         Place a reference marker (e.g. coin or credit card edge 54mm) next to the package to accurately measure font heights in mm against statutory Rule 7 thresholds.
                     </p>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: flex-end;">
+                    <div class="calibration-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: flex-end;">
                         <div>
                             <label class="form-label small">Reference Width (mm)</label>
                             <input type="number" id="inputCalibrationMm" class="form-control" value="50">
@@ -248,7 +248,7 @@
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+                <div class="step-actions" style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
                     <button type="button" onclick="goToStep(2)" class="btn btn-outline-primary">
                         ← Back
                     </button>
@@ -307,7 +307,7 @@
                 <!-- Inspection Metadata Inputs (Store & Location) -->
                 <div style="background: #F1F5F9; border-radius: var(--radius-sm); padding: 16px; margin-bottom: 24px;">
                     <h4 style="font-size: 0.95rem; margin-bottom: 12px; color: var(--primary-navy);">📍 Inspection Location Details</h4>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div class="inspection-meta-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                         <div>
                             <label class="form-label small">Store / Retailer Name</label>
                             <input type="text" id="inputStoreName" class="form-control" value="Modern Bazaar Supermarket, Connaught Place">
@@ -353,7 +353,7 @@
                 </div>
 
                 <!-- Action Buttons -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 32px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                <div class="step-actions" style="display: flex; justify-content: space-between; align-items: center; margin-top: 32px; border-top: 1px solid var(--border-color); padding-top: 20px;">
                     <button type="button" id="btnNewScan" class="btn btn-outline-primary">
                         🔄 Start New Scan
                     </button>

@@ -165,8 +165,8 @@
 
 /* Calibration Guide Box */
 .calibration-box {
-    background: #F1F5F9;
-    border: 1px dashed #94A3B8;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
     border-radius: var(--radius-sm);
     padding: 16px;
     margin-top: 16px;
@@ -289,3 +289,122 @@
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+
+/* ============================================================
+   MOBILE RESPONSIVE ENHANCEMENTS FOR SCANNER (max-width: 768px)
+   ============================================================ */
+@media (max-width: 768px) {
+    /* 3. Stepper Component: Compact, sleek numbered circles */
+    .wizard-timeline {
+        margin-bottom: 14px !important;
+        margin-top: 4px !important;
+        padding: 0 4px !important;
+    }
+
+    .wizard-timeline::before {
+        top: 15px !important;
+        left: 16px !important;
+        right: 16px !important;
+        height: 2px !important;
+    }
+
+    .step-indicator {
+        position: relative;
+    }
+
+    .step-circle {
+        width: 30px !important;
+        height: 30px !important;
+        font-size: 0.82rem !important;
+        margin-bottom: 0 !important;
+        border-width: 2px !important;
+    }
+
+    .wizard-timeline .step-label {
+        display: none !important;
+    }
+
+    /* 8. Camera Overlay: sleek, compact pill */
+    #liveEdgeBadge {
+        padding: 3px 8px !important;
+        font-size: 11px !important;
+        background: rgba(0, 0, 0, 0.75) !important;
+        top: 6px !important;
+        border-radius: 10px !important;
+        letter-spacing: 0.2px !important;
+        border: 1px solid rgba(16, 185, 129, 0.5) !important;
+        max-width: 90% !important;
+        text-align: center !important;
+        white-space: nowrap !important;
+    }
+
+    /* 9. Camera Viewport & Placeholder adjustments */
+    .camera-container {
+        min-height: 200px !important;
+        max-height: 250px !important;
+        height: 230px !important;
+        aspect-ratio: auto !important;
+        margin-bottom: 12px !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 8px !important;
+    }
+
+    .calibration-box {
+        padding: 12px !important;
+        margin-top: 10px !important;
+    }
+
+    .calibration-box > div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+
+    /* 6. Action buttons in scanner stack vertically */
+    .wizard-step-content div[style*="display: flex; justify-content: center"],
+    .wizard-step-content div[style*="display: flex; justify-content: flex-end"],
+    .wizard-step-content div[style*="display: flex; justify-content: space-between"] {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 10px !important;
+        align-items: stretch !important;
+        margin-top: 12px !important;
+    }
+
+    .wizard-step-content .btn {
+        width: 100% !important;
+        min-height: 44px !important;
+        margin-bottom: 10px !important;
+        justify-content: center !important;
+        text-align: center !important;
+        font-size: 0.9rem !important;
+    }
+
+    .wizard-step-content .btn:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    /* Barcode Details Box on Step 2 */
+    .barcode-details-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+    }
+
+    .barcode-tags-container {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 8px !important;
+    }
+
+    .barcode-tags-container .badge {
+        width: 100% !important;
+        min-height: 36px !important;
+    }
+
+    /* Inspection location inputs grid */
+    .inspection-meta-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+}
+
