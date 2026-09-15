@@ -9,7 +9,7 @@ const RAW_META = {
         rule_ref: "Rule 6(1)(a)",
         label: "Manufacturer Name & Address",
         shortLabel: "Mfr Info",
-        color: "#2563EB",
+        color: "#3B82F6",
         weight: 20
     },
     rule6c: {
@@ -17,7 +17,7 @@ const RAW_META = {
         rule_ref: "Rule 6(1)(c)",
         label: "Generic Commodity Name",
         shortLabel: "Generic Name",
-        color: "#0EA5E9",
+        color: "#6366F1",
         weight: 15
     },
     rule6d: {
@@ -33,7 +33,7 @@ const RAW_META = {
         rule_ref: "Rule 6(1)(e)",
         label: "Mfg / Packing Date",
         shortLabel: "Mfg Date",
-        color: "#14B8A6",
+        color: "#10B981",
         weight: 15
     },
     rule6f: {
@@ -49,7 +49,7 @@ const RAW_META = {
         rule_ref: "Rule 6(1)(g)",
         label: "Consumer Care Details",
         shortLabel: "Consumer Care",
-        color: "#8B5CF6",
+        color: "#A855F7",
         weight: 15
     },
     rule5: {
@@ -89,23 +89,23 @@ const RAW_META = {
         rule_ref: "Rule 10",
         label: "Postal Address & PIN Code",
         shortLabel: "PIN Code",
-        color: "#A855F7",
+        color: "#8B5CF6",
         weight: 10
     },
     rule12: {
         id: "rule12",
         rule_ref: "Rule 12",
         label: "Prohibited Exaggerating Words",
-        shortLabel: "Vague Words",
-        color: "#EF4444",
+        shortLabel: "Prohibited Words",
+        color: "#F43F5E",
         weight: 20
     },
     rule13: {
         id: "rule13",
         rule_ref: "Rule 13",
         label: "Non-Metric / Obsolete Units",
-        shortLabel: "Units",
-        color: "#DC2626",
+        shortLabel: "Non-Metric Units",
+        color: "#EF4444",
         weight: 15
     },
     auth: {
@@ -113,7 +113,7 @@ const RAW_META = {
         rule_ref: "Authenticity Check",
         label: "Barcode vs Label Authenticity",
         shortLabel: "Authenticity",
-        color: "#FACC15",
+        color: "#FB7185",
         weight: 30
     }
 };

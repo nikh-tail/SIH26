@@ -331,6 +331,7 @@ function renderComplianceBreakdown(scan) {
     // Chart A: Compliant Declarations (PASSED)
     renderPieChart(compliantContainer, {
         title: "Compliant Declarations",
+        caption: "Weighted by score contribution",
         segments: passed,
         emptyMessage: "No rules passed",
         totalLabel: "Passed"
@@ -339,6 +340,7 @@ function renderComplianceBreakdown(scan) {
     // Chart B: Statutory Violations (FAILED)
     renderPieChart(violationsContainer, {
         title: "Statutory Violations",
+        caption: "Weighted by points deducted",
         segments: failed,
         emptyMessage: "Zero violations detected",
         totalLabel: "Failed"

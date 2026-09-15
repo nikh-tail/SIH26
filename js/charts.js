@@ -24,6 +24,7 @@ export function renderPieChart(container, options = {}) {
 
     const {
         title = "",
+        caption = "",
         segments = [],
         emptyMessage = "No data available",
         totalLabel = "RULES"
@@ -39,6 +40,14 @@ export function renderPieChart(container, options = {}) {
         container.appendChild(heading);
     }
 
+    // One-line caption above donut in 11px muted text
+    if (caption) {
+        const captionEl = document.createElement("div");
+        captionEl.className = "chart-caption";
+        captionEl.textContent = caption;
+        container.appendChild(captionEl);
+    }
+
     // 2. SVG Donut Element
     const svg = document.createElementNS(SVG_NS, "svg");
     svg.setAttribute("viewBox", "0 0 220 220");
@@ -52,12 +61,27 @@ export function renderPieChart(container, options = {}) {
     const cx = 110;
     const cy = 110;
     const outerR = 100;
-    const innerR = 58;
-    const midR = (outerR + innerR) / 2; // 79
+    const innerR = 66; // Thinner ring: inner radius 66 instead of 58
+    const midR = (outerR + innerR) / 2; // 83
 
     const prefersReducedMotion = typeof window !== "undefined" &&
         window.matchMedia &&
         window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // Subtle 1px inner shadow on the centre hole
+    const filterId = "hole-shadow-" + Math.random().toString(36).substring(2, 8);
+    const defs = document.createElementNS(SVG_NS, "defs");
+    defs.innerHTML = `
+        <filter id="${filterId}" x="-20%" y="-20%" width="140%" height="140%">
+            <feOffset dx="0" dy="1"/>
+            <feGaussianBlur stdDeviation="1" result="offset-blur"/>
+            <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse"/>
+            <feFlood flood-color="#0F172A" flood-opacity="0.14" result="color"/>
+            <feComposite operator="in" in="color" in2="inverse" result="shadow"/>
+            <feComposite operator="over" in="shadow" in2="SourceGraphic"/>
+        </filter>
+    `;
+    svg.appendChild(defs);
 
     // Check edge case: EMPTY
     if (safeSegments.length === 0) {
@@ -67,32 +91,43 @@ export function renderPieChart(container, options = {}) {
         dashedRing.setAttribute("cy", String(cy));
         dashedRing.setAttribute("r", String(midR));
         dashedRing.setAttribute("fill", "none");
-        dashedRing.setAttribute("stroke", "#94A3B8");
-        dashedRing.setAttribute("stroke-width", "3");
-        dashedRing.setAttribute("stroke-dasharray", "6 6");
-        dashedRing.setAttribute("opacity", "0.7");
+        dashedRing.setAttribute("stroke", "#CBD5E1");
+        dashedRing.setAttribute("stroke-width", "2");
+        dashedRing.setAttribute("stroke-dasharray", "4 4");
+        dashedRing.setAttribute("opacity", "0.8");
         svg.appendChild(dashedRing);
 
-        // Center Count 0
+        // Center hole circle with subtle 1px inner shadow
+        const holeCircle = document.createElementNS(SVG_NS, "circle");
+        holeCircle.setAttribute("cx", String(cx));
+        holeCircle.setAttribute("cy", String(cy));
+        holeCircle.setAttribute("r", String(innerR));
+        holeCircle.setAttribute("fill", "var(--chart-card-bg, #FFFFFF)");
+        holeCircle.setAttribute("filter", `url(#${filterId})`);
+        svg.appendChild(holeCircle);
+
+        // Center Count 0: 42px, weight 700
         const zeroText = document.createElementNS(SVG_NS, "text");
         zeroText.setAttribute("x", String(cx));
-        zeroText.setAttribute("y", "104");
+        zeroText.setAttribute("y", "108");
         zeroText.setAttribute("text-anchor", "middle");
-        zeroText.setAttribute("font-size", "26");
-        zeroText.setAttribute("font-weight", "800");
-        zeroText.setAttribute("fill", "#64748B");
+        zeroText.setAttribute("font-size", "42");
+        zeroText.setAttribute("font-weight", "700");
+        zeroText.setAttribute("fill", "#94A3B8");
+        zeroText.classList.add("chart-center-count");
         zeroText.textContent = "0";
         svg.appendChild(zeroText);
 
-        // Center Label
+        // Center Label: 9px, letter-spacing 0.12em, muted colour
         const subLabel = document.createElementNS(SVG_NS, "text");
         subLabel.setAttribute("x", String(cx));
-        subLabel.setAttribute("y", "120");
+        subLabel.setAttribute("y", "126");
         subLabel.setAttribute("text-anchor", "middle");
-        subLabel.setAttribute("font-size", "10");
-        subLabel.setAttribute("font-weight", "700");
-        subLabel.setAttribute("letter-spacing", "0.08em");
+        subLabel.setAttribute("font-size", "9");
+        subLabel.setAttribute("font-weight", "600");
+        subLabel.setAttribute("letter-spacing", "0.12em");
         subLabel.setAttribute("fill", "#94A3B8");
+        subLabel.classList.add("chart-center-label");
         subLabel.textContent = totalLabel.toUpperCase();
         svg.appendChild(subLabel);
 
@@ -159,8 +194,8 @@ export function renderPieChart(container, options = {}) {
         circle.setAttribute("cy", String(cy));
         circle.setAttribute("r", String(midR));
         circle.setAttribute("fill", "none");
-        circle.setAttribute("stroke", seg.color || "#2563EB");
-        circle.setAttribute("stroke-width", "42");
+        circle.setAttribute("stroke", seg.color || "#3B82F6");
+        circle.setAttribute("stroke-width", "34"); // 100 - 66 = 34
         circle.setAttribute("role", "img");
         circle.classList.add("chart-slice");
         circle.dataset.ruleId = seg.id;
@@ -220,9 +255,10 @@ export function renderPieChart(container, options = {}) {
 
             const path = document.createElementNS(SVG_NS, "path");
             path.setAttribute("d", pathD);
-            path.setAttribute("fill", seg.color || "#2563EB");
-            path.setAttribute("stroke", "var(--card-bg, #FFFFFF)");
-            path.setAttribute("stroke-width", "1.5");
+            path.setAttribute("fill", seg.color || "#3B82F6");
+            path.setAttribute("stroke", "var(--chart-card-bg, #FFFFFF)");
+            path.setAttribute("stroke-width", "2");
+            path.setAttribute("stroke-linejoin", "round");
             path.setAttribute("role", "img");
             path.classList.add("chart-slice");
             path.dataset.ruleId = seg.id;
@@ -259,29 +295,40 @@ export function renderPieChart(container, options = {}) {
 
     svg.appendChild(slicesGroup);
 
+    // Center hole circle with subtle 1px inner shadow
+    const holeCircle = document.createElementNS(SVG_NS, "circle");
+    holeCircle.setAttribute("cx", String(cx));
+    holeCircle.setAttribute("cy", String(cy));
+    holeCircle.setAttribute("r", String(innerR));
+    holeCircle.setAttribute("fill", "var(--chart-card-bg, #FFFFFF)");
+    holeCircle.setAttribute("filter", `url(#${filterId})`);
+    svg.appendChild(holeCircle);
+
     // 3. Center Donut Display
     const centerGroup = document.createElementNS(SVG_NS, "g");
     centerGroup.classList.add("chart-center-group");
 
+    // Centre number: increase to 42px, weight 700
     const countText = document.createElementNS(SVG_NS, "text");
     countText.setAttribute("x", String(cx));
-    countText.setAttribute("y", "106");
+    countText.setAttribute("y", "108");
     countText.setAttribute("text-anchor", "middle");
-    countText.setAttribute("font-size", "28");
-    countText.setAttribute("font-weight", "800");
+    countText.setAttribute("font-size", "42");
+    countText.setAttribute("font-weight", "700");
     countText.setAttribute("fill", "var(--primary-navy, #0B2545)");
     countText.classList.add("chart-center-count");
     countText.textContent = String(safeSegments.length);
     centerGroup.appendChild(countText);
 
+    // Label below it: 9px, letter-spacing 0.12em, muted colour
     const labelText = document.createElementNS(SVG_NS, "text");
     labelText.setAttribute("x", String(cx));
-    labelText.setAttribute("y", "122");
+    labelText.setAttribute("y", "126");
     labelText.setAttribute("text-anchor", "middle");
-    labelText.setAttribute("font-size", "10");
-    labelText.setAttribute("font-weight", "700");
-    labelText.setAttribute("letter-spacing", "0.08em");
-    labelText.setAttribute("fill", "#64748B");
+    labelText.setAttribute("font-size", "9");
+    labelText.setAttribute("font-weight", "600");
+    labelText.setAttribute("letter-spacing", "0.12em");
+    labelText.setAttribute("fill", "var(--text-muted, #94A3B8)");
     labelText.classList.add("chart-center-label");
     labelText.textContent = totalLabel.toUpperCase();
     centerGroup.appendChild(labelText);
@@ -289,13 +336,15 @@ export function renderPieChart(container, options = {}) {
     svg.appendChild(centerGroup);
     container.appendChild(svg);
 
-    // 4. Sibling Legend (<ul>)
+    // 4. Sibling Legend (<ul>) - Single-column list
     const legendUl = document.createElement("ul");
     legendUl.className = "chart-legend";
     legendUl.setAttribute("role", "list");
 
     safeSegments.forEach(seg => {
         const li = document.createElement("li");
+        li.className = "chart-legend-item";
+
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "chart-legend-btn";
@@ -304,7 +353,7 @@ export function renderPieChart(container, options = {}) {
 
         const swatch = document.createElement("span");
         swatch.className = "chart-legend-swatch";
-        swatch.style.backgroundColor = seg.color || "#2563EB";
+        swatch.style.backgroundColor = seg.color || "#3B82F6";
 
         const nameSpan = document.createElement("span");
         nameSpan.className = "chart-legend-label";
