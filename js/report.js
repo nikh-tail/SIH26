@@ -2,10 +2,11 @@
 // INSPECTION REPORT & EVIDENCE DOSSIER CONTROLLER
 // ============================================================
 
-import { RULE_META, getRuleMeta } from "./ruleColors.js";
+import { RULE_META, getRuleMeta, FAIL_PALETTE, PASS_PALETTE, assignPaletteColors } from "./ruleColors.js";
 import { renderPieChart } from "./charts.js";
 
 let currentScan = null;
+const activeScanColors = new Map();
 
 document.addEventListener("DOMContentLoaded", async () => {
     // 1. Get scan ID from URL
@@ -41,8 +42,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 3. Render report components
     renderReportHeader(currentScan);
     renderAuthenticityMatrix(currentScan);
-    renderDeclarationsTable(currentScan.declarations || []);
     renderComplianceBreakdown(currentScan);
+    renderDeclarationsTable(currentScan.declarations || []);
     renderViolationsList(currentScan.violations || []);
     renderEvidencePhoto(currentScan);
 
@@ -312,6 +313,17 @@ export function computeRuleBreakdown(scan) {
         }
     });
 
+    // Fails (red family, dark -> light, assigned by descending point value)
+    assignPaletteColors(failed, FAIL_PALETTE);
+
+    // Passes (emerald family, same rule: dark -> light, assigned by descending point value)
+    assignPaletteColors(passed, PASS_PALETTE);
+
+    // Populate active scan colors lookup
+    activeScanColors.clear();
+    passed.forEach(p => activeScanColors.set(p.id, p.color));
+    failed.forEach(f => activeScanColors.set(f.id, f.color));
+
     return { passed, failed, notApplicableCount, totalPenalty, items };
 }
 
@@ -387,7 +399,8 @@ function highlightRuleItem(ruleId) {
     if (target) {
         target.scrollIntoView({ behavior: "smooth", block: "center" });
         const meta = getRuleMeta(ruleId);
-        target.style.setProperty("--flash-color", meta.color || "#2563EB");
+        const flashColor = activeScanColors.get(ruleId) || meta.color || "#DC2626";
+        target.style.setProperty("--flash-color", flashColor);
         target.classList.remove("rule-highlight-flash");
         // Trigger reflow to restart animation
         void target.offsetWidth;
@@ -410,6 +423,7 @@ function renderDeclarationsTable(declarations) {
 
     declarations.forEach(d => {
         const meta = getRuleMeta(d.rule_reference || d.rule_ref || d.label || d.declaration_type);
+        const ruleColor = activeScanColors.get(meta.id) || (d.compliant ? PASS_PALETTE[4] : FAIL_PALETTE[4]);
         const tr = document.createElement("tr");
         tr.setAttribute("data-rule-id", meta.id);
 
@@ -423,7 +437,7 @@ function renderDeclarationsTable(declarations) {
 
         tr.innerHTML = `
             <td><strong>${d.label || d.declaration_type}</strong></td>
-            <td><code style="border-left: 3px solid ${meta.color}; padding-left: 4px;">${d.rule_reference || "Unclassified Check"}</code></td>
+            <td><code style="border-left: 3px solid ${ruleColor}; padding-left: 4px;">${d.rule_reference || "Unclassified Check"}</code></td>
             <td>${d.value_extracted ? `<strong>"${d.value_extracted}"</strong>` : "<em class=\"text-danger\">Missing / Not Found</em>"}</td>
             <td>${fontDisplay}</td>
             <td>${statusBadge}</td>
@@ -447,11 +461,12 @@ function renderViolationsList(violations) {
 
     violations.forEach((v, idx) => {
         const meta = getRuleMeta(v.rule_reference || v.rule_ref || v.title);
+        const cardColor = activeScanColors.get(meta.id) || FAIL_PALETTE[4];
         const card = document.createElement("div");
         card.className = "violation-item-card " + (v.severity === "critical" ? "vio-border-danger" : "vio-border-warning");
         card.setAttribute("data-rule-id", meta.id);
-        // Consistent 4px left border in exact rule color
-        card.style.borderLeft = `4px solid ${meta.color}`;
+        // Consistent 4px left border in exact rule color assigned from fails palette
+        card.style.borderLeft = `4px solid ${cardColor}`;
 
         card.innerHTML = `
             <div class="d-flex justify-content-between align-items-center mb-2">

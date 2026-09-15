@@ -203,7 +203,67 @@ export function getRuleMeta(id) {
     };
 }
 
+// ============================================================
+// TONAL GRADIENT PALETTES (Dark -> Light by Descending Points)
+// ============================================================
+
+export const FAIL_PALETTE = Object.freeze([
+    "#7F1D1D",
+    "#991B1B",
+    "#B91C1C",
+    "#DC2626",
+    "#EF4444",
+    "#F87171",
+    "#FCA5A5",
+    "#FECACA"
+]);
+
+export const PASS_PALETTE = Object.freeze([
+    "#064E3B",
+    "#065F46",
+    "#047857",
+    "#059669",
+    "#10B981",
+    "#34D399",
+    "#6EE7B7",
+    "#A7F3D0"
+]);
+
+/**
+ * Sorts segments descending by point value and assigns gradient colors from dark to light.
+ * @param {Array<{id: string, value: number, color?: string}>} segments
+ * @param {readonly string[]} palette
+ * @returns {Array}
+ */
+export function assignPaletteColors(segments, palette) {
+    if (!Array.isArray(segments) || segments.length === 0) return segments;
+
+    // Sort descending by point value (weight), then stably by id
+    segments.sort((a, b) => {
+        const valDiff = (Number(b.value) || 0) - (Number(a.value) || 0);
+        if (valDiff !== 0) return valDiff;
+        return (a.id || "").localeCompare(b.id || "");
+    });
+
+    const total = segments.length;
+    segments.forEach((seg, idx) => {
+        if (total <= palette.length) {
+            seg.color = palette[idx];
+        } else {
+            const ratio = idx / (total - 1);
+            const palIdx = Math.round(ratio * (palette.length - 1));
+            seg.color = palette[palIdx];
+        }
+    });
+
+    return segments;
+}
+
 if (typeof window !== "undefined") {
     window.RULE_META = RULE_META;
     window.getRuleMeta = getRuleMeta;
+    window.FAIL_PALETTE = FAIL_PALETTE;
+    window.PASS_PALETTE = PASS_PALETTE;
+    window.assignPaletteColors = assignPaletteColors;
 }
+
