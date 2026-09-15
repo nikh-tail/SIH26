@@ -1321,9 +1321,10 @@ img, svg, video {
 }
 
 .offline-verification-banner p {
-    margin: 0 0 12px 0;
+    margin: 0;
     font-size: 0.85rem;
     line-height: 1.4;
+    color: #78350F;
 }
 
 .offline-edit-grid {
