@@ -42,6 +42,10 @@
             <span id="officerNameDisplay">Inspector Rajesh Sharma</span>
         </div>
         <div class="officer-subbar-right">
+            <label class="offline-toggle-wrapper" title="Force offline OCR extraction (simulates no internet connection)">
+                <input type="checkbox" id="chkOfflineMode">
+                <span>Offline Mode</span>
+            </label>
             <span class="officer-badge-id" id="badgeDisplay">LM-DEL-8942</span>
         </div>
     </div>
@@ -279,13 +283,74 @@
         </div>
 
         <!-- ============================================================
-             STEP 4: AI PROCESSING PLACEHOLDER
+             STEP 4: AI PROCESSING & VERIFICATION
              ============================================================ -->
         <div id="stepContent4" class="wizard-step-content">
-            <div class="card" style="text-align: center; padding: 60px 20px;">
-                <div class="spinner-icon" style="margin: 0 auto 20px auto; border-top-color: var(--color-primary); border-color: #E2E8F0; border-top-color: var(--color-primary);"></div>
-                <h3 style="color: var(--primary-navy); margin-bottom: 8px; font-weight: 700;">Analyzing Packaged Commodity Label...</h3>
-                <p class="text-secondary" style="font-size: 0.95rem;">Multimodal Gemini Vision is identifying mandatory Rule 6 declarations and measuring Rule 7 font sizes.</p>
+            <!-- Loading State Card -->
+            <div id="step4LoadingCard" class="card" style="text-align: center; padding: 60px 20px;">
+                <div class="spinner-icon" style="margin: 0 auto 20px auto; border-top-color: var(--color-primary); border-color: #E2E8F0;"></div>
+                <h3 id="step4LoadingTitle" style="color: var(--primary-navy); margin-bottom: 8px; font-weight: 700;">Analyzing Packaged Commodity Label...</h3>
+                <p id="step4LoadingSubtitle" class="text-secondary" style="font-size: 0.95rem;">Extracting mandatory Rule 6 declarations and measuring statutory specifications.</p>
+            </div>
+
+            <!-- Offline OCR / Manual Verification Form Card (Initially hidden) -->
+            <div id="step4VerificationCard" class="card" style="display: none;">
+                <div class="offline-verification-banner">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                        <h4 style="margin: 0; font-size: 1rem; font-weight: 700; color: #92400E;">
+                            ⚠️ Offline OCR Extraction — Officer Verification Required
+                        </h4>
+                        <span id="step4SourceBadge" class="vision-source-pill source-tesseract">Offline OCR — Please Verify</span>
+                    </div>
+                    <p>
+                        Label fields were extracted using local on-device OCR and heuristic parsing. Please verify the detected statutory fields and correct any inaccuracies before proceeding to the compliance audit.
+                    </p>
+                </div>
+
+                <div class="offline-edit-grid">
+                    <div class="offline-field-group">
+                        <label for="editProductName">Product / Commodity Name (Rule 6c)</label>
+                        <input type="text" id="editProductName" placeholder="e.g. Parle-G Gold Biscuits">
+                    </div>
+                    <div class="offline-field-group">
+                        <label for="editManufacturerName">Manufacturer / Packer Name (Rule 6a)</label>
+                        <input type="text" id="editManufacturerName" placeholder="e.g. Parle Products Pvt. Ltd.">
+                    </div>
+                    <div class="offline-field-group">
+                        <label for="editManufacturerAddress">Manufacturer Complete Address</label>
+                        <input type="text" id="editManufacturerAddress" placeholder="e.g. Vile Parle East, Mumbai">
+                    </div>
+                    <div class="offline-field-group">
+                        <label for="editPinCode">Postal PIN Code (Rule 10)</label>
+                        <input type="text" id="editPinCode" placeholder="e.g. 400057" maxlength="6">
+                    </div>
+                    <div class="offline-field-group">
+                        <label for="editNetQuantity">Net Quantity & Unit (Rule 6d)</label>
+                        <input type="text" id="editNetQuantity" placeholder="e.g. 1 kg / 500 g / 200 ml">
+                    </div>
+                    <div class="offline-field-group">
+                        <label for="editMfgDate">Date of Mfg / Packing (Rule 6e)</label>
+                        <input type="text" id="editMfgDate" placeholder="e.g. 05/2024 or May 2024">
+                    </div>
+                    <div class="offline-field-group">
+                        <label for="editMrp">Maximum Retail Price (Rule 6f)</label>
+                        <input type="text" id="editMrp" placeholder="e.g. ₹ 140.00 (incl. of all taxes)">
+                    </div>
+                    <div class="offline-field-group">
+                        <label for="editConsumerCare">Consumer Care Phone / Email (Rule 6g)</label>
+                        <input type="text" id="editConsumerCare" placeholder="e.g. 1800-222-111 / care@company.com">
+                    </div>
+                    <div class="offline-field-group">
+                        <label for="editFssai">FSSAI License / Number</label>
+                        <input type="text" id="editFssai" placeholder="e.g. 10012011000123" maxlength="14">
+                    </div>
+                </div>
+
+                <div class="step-actions" style="margin-top: 20px;">
+                    <button type="button" id="btnSubmitOfflineVerification" class="btn btn-primary btn-lg" style="width: 100%; min-height: 48px;">
+                        Confirm & Evaluate Compliance →
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -296,7 +361,10 @@
             <div class="card">
                 <div class="card-header">
                     <div>
-                        <h2 class="card-title">Inspection Results & Statutory Summary</h2>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <h2 class="card-title" style="margin: 0;">Inspection Results & Statutory Summary</h2>
+                            <span id="aiProviderBadge" class="vision-source-pill source-gemini">AI Verified (Cloud)</span>
+                        </div>
                         <p class="text-secondary" style="font-size: 0.88rem; margin: 4px 0 0 0;">
                             Evaluated under Legal Metrology Act, 2009 and Packaged Commodities Rules, 2011.
                         </p>
@@ -431,9 +499,9 @@
     <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
     <script src="js/barcode.js"></script>
-    <script src="js/vision.js"></script>
     <script src="js/compliance.js"></script>
     <script src="js/perspective-cropper.js"></script>
-    <script src="js/scanner.js"></script>
+    <script type="module" src="js/vision.js"></script>
+    <script type="module" src="js/scanner.js"></script>
 </body>
 </html>

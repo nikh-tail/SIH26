@@ -84,6 +84,22 @@ function renderReportHeader(scan) {
     }
 
     document.getElementById("reportScoreDisplay").textContent = (scan.compliance_score || 0) + "%";
+
+    // AI / OCR Provider Source Badge
+    const sourceBadge = document.getElementById("reportAiSourceBadge");
+    if (sourceBadge) {
+        const source = scan.vision_raw?.source || scan.visionMeta?.provider || scan.source || "gemini";
+        if (source === "gemini") {
+            sourceBadge.className = "vision-source-pill source-gemini";
+            sourceBadge.textContent = "AI Verified (Cloud)";
+        } else if (source === "tesseract") {
+            sourceBadge.className = "vision-source-pill source-tesseract";
+            sourceBadge.textContent = "Offline OCR — Verified";
+        } else {
+            sourceBadge.className = "vision-source-pill source-manual";
+            sourceBadge.textContent = "Manual Entry Verified";
+        }
+    }
 }
 
 function renderAuthenticityMatrix(scan) {

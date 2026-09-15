@@ -423,6 +423,9 @@ const ComplianceEngine = {
     }
 };
 
+if (typeof window !== 'undefined') {
+    window.ComplianceEngine = ComplianceEngine;
+}
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = ComplianceEngine;
 }

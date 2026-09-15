@@ -3,6 +3,8 @@
 // Handles Camera, Multi-Source Barcode, Label Capture & AI Run
 // ============================================================
 
+import { analyzeLabel, getLastProviderUsed, getVisionTelemetry, createEmptyLabelFields } from './vision.js';
+
 let currentStep = 1;
 let cameraStream = null;
 let barcodeDetector = null;
@@ -22,6 +24,10 @@ const scanState = {
     complianceReport: null
 };
 
+if (typeof window !== 'undefined') {
+    window.scanState = scanState;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const profile = (typeof SupabaseService !== 'undefined' && SupabaseService.getProfile)
@@ -37,9 +43,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.warn('Auth profile initialization note:', err.message);
     }
 
+    // Offline Mode Toggle Initialization
+    const chkOffline = document.getElementById('chkOfflineMode');
+    if (chkOffline) {
+        chkOffline.checked = localStorage.getItem('slm_offline_mode') === 'true';
+        chkOffline.addEventListener('change', (e) => {
+            localStorage.setItem('slm_offline_mode', e.target.checked ? 'true' : 'false');
+            console.log('[Scanner] Offline mode set to:', e.target.checked);
+        });
+    }
+
     initWizardNav();
     initCamera();
     initStepHandlers();
+    initOfflineVerificationHandler();
 });
 
 function initWizardNav() {
@@ -138,6 +155,11 @@ function goToStep(step) {
             PerspectiveCropper.stopLivePerspectiveOverlay();
         }
     }
+}
+
+if (typeof window !== 'undefined') {
+    window.goToStep = goToStep;
+    window.canNavigateToStep = canNavigateToStep;
 }
 
 async function initCamera() {
@@ -569,6 +591,7 @@ function initStepHandlers() {
     if (btnSave) {
         btnSave.onclick = async () => {
             showLoading('Saving inspection record...');
+            const telemetry = (window.VisionEngine?.getVisionTelemetry || getVisionTelemetry)?.() || null;
             const record = {
                 product_name: scanState.visionData?.product_name?.value || scanState.barcodeData?.productName || 'Inspected Commodity',
                 brand: scanState.visionData?.manufacturer_name?.value || scanState.barcodeData?.brand || 'Unknown',
@@ -580,7 +603,8 @@ function initStepHandlers() {
                 violations: scanState.complianceReport?.violations || [],
                 vision_raw: scanState.visionData || {},
                 barcode_data: scanState.barcodeData || {},
-                image_url: scanState.labelImage
+                image_url: scanState.labelImage,
+                visionMeta: telemetry
             };
             console.log('[Save] Saving scan record:', record);
             try {
@@ -602,6 +626,75 @@ function initStepHandlers() {
     console.log('[Scanner] ✅ All step handlers initialized.');
 }
 
+function setVerificationFieldValue(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = val || '';
+}
+
+function updateAiSourceBadge(source) {
+    const badge = document.getElementById('aiProviderBadge');
+    if (!badge) return;
+    if (source === 'gemini') {
+        badge.className = 'vision-source-pill source-gemini';
+        badge.textContent = 'AI Verified (Cloud)';
+    } else if (source === 'tesseract') {
+        badge.className = 'vision-source-pill source-tesseract';
+        badge.textContent = 'Offline OCR — Verified';
+    } else {
+        badge.className = 'vision-source-pill source-manual';
+        badge.textContent = 'Manual Entry Verified';
+    }
+}
+
+function initOfflineVerificationHandler() {
+    const btnSubmit = document.getElementById('btnSubmitOfflineVerification');
+    if (!btnSubmit) return;
+
+    btnSubmit.onclick = () => {
+        const pName = document.getElementById('editProductName')?.value.trim() || '';
+        const mfgName = document.getElementById('editManufacturerName')?.value.trim() || '';
+        const mfgAddr = document.getElementById('editManufacturerAddress')?.value.trim() || '';
+        const pin = document.getElementById('editPinCode')?.value.trim() || '';
+        const netQty = document.getElementById('editNetQuantity')?.value.trim() || '';
+        const mfgDate = document.getElementById('editMfgDate')?.value.trim() || '';
+        const mrp = document.getElementById('editMrp')?.value.trim() || '';
+        const care = document.getElementById('editConsumerCare')?.value.trim() || '';
+        const fssai = document.getElementById('editFssai')?.value.trim() || '';
+
+        const data = scanState.visionData || {};
+        data.product_name = { value: pName, present: Boolean(pName), confidence: 1.0 };
+        data.manufacturer_name = { value: mfgName, present: Boolean(mfgName), confidence: 1.0 };
+        data.manufacturer_address = { value: mfgAddr, present: Boolean(mfgAddr), confidence: 1.0 };
+        data.pin_code = { value: pin, present: Boolean(pin), confidence: 1.0 };
+        data.net_quantity = { value: netQty, present: Boolean(netQty), confidence: 1.0 };
+        data.mfg_date = { value: mfgDate, present: Boolean(mfgDate), confidence: 1.0 };
+        data.mrp = { value: mrp, present: Boolean(mrp), confidence: 1.0 };
+        data.consumer_care = { value: care, present: Boolean(care), confidence: 1.0 };
+        data.fssai_license = { value: fssai, present: Boolean(fssai), confidence: 1.0 };
+
+        data.productName = pName;
+        data.manufacturerName = mfgName;
+        data.manufacturerAddress = mfgAddr;
+        data.pinCode = pin;
+        data.netQuantity = netQty;
+        data.mfgDate = mfgDate;
+        data.mrpValue = mrp;
+        data.consumerCare = care;
+        data.fssaiNumber = fssai;
+
+        scanState.visionData = data;
+
+        const evalResult = ComplianceEngine.evaluateCompliance(data, scanState.barcodeData, scanState.calibration);
+        scanState.complianceReport = evalResult;
+
+        const source = data.source || 'tesseract';
+        updateAiSourceBadge(source);
+        renderAiExtractionCards(data);
+        renderComplianceSummary(evalResult);
+        goToStep(5);
+    };
+}
+
 async function runMultimodalAnalysis() {
     console.group('[Vision] === Multimodal Analysis Start ===');
     const labelImages = (scanState.labelImages.length
@@ -613,44 +706,80 @@ async function runMultimodalAnalysis() {
         size: image ? Math.round(image.length / 1024) + 'KB' : 'MISSING'
     })));
     console.log('[Vision] Barcode data:', JSON.stringify(scanState.barcodeData));
-    console.log('[Vision] BACKEND_URL:', CONFIG.BACKEND_URL);
-    console.log('[Vision] VISION_PROXY_URL:', CONFIG.VISION_PROXY_URL);
 
-    showLoading('Analyzing mandatory declarations & label authenticity...');
+    // Reset Step 4 elements
+    const step4Loading = document.getElementById('step4LoadingCard');
+    const step4Verify = document.getElementById('step4VerificationCard');
+    if (step4Loading) step4Loading.style.display = 'block';
+    if (step4Verify) step4Verify.style.display = 'none';
+
     goToStep(4);
 
     try {
-        console.log('[Vision] → Calling VisionEngine.analyzeLabel()...');
-        const response = await VisionEngine.analyzeLabel(labelImages, scanState.barcodeData);
+        console.log('[Vision] → Calling analyzeLabel()...');
+        const isOfflineForced = localStorage.getItem('slm_offline_mode') === 'true' || !navigator.onLine;
+        const response = await (window.VisionEngine?.analyzeLabel || analyzeLabel)(labelImages, {
+            barcodeData: scanState.barcodeData,
+            forceOffline: isOfflineForced
+        });
 
         console.log('[Vision] ← Raw API response:', JSON.stringify(response, null, 2));
-        console.log('[Vision] response.success:', response?.success);
-        console.log('[Vision] response.simulated:', response?.simulated);
-        console.log('[Vision] response.error:', response?.error);
-        console.log('[Vision] response.data keys:', response?.data ? Object.keys(response.data) : 'NO DATA');
 
-        if (response && response.data) {
-            scanState.visionData = response.data;
-            console.log('[Compliance] Running ComplianceEngine.evaluateCompliance()...');
-            const evalResult = ComplianceEngine.evaluateCompliance(response.data, scanState.barcodeData, scanState.calibration);
-            console.log('[Compliance] Result:', JSON.stringify(evalResult, null, 2));
-            scanState.complianceReport = evalResult;
+        const data = response?.data || response;
+        const source = response?.source || data?.source || 'gemini';
 
-            renderAiExtractionCards(response.data);
-            renderComplianceSummary(evalResult);
-            goToStep(5);
-            console.log('[Vision] ✅ Render complete. Step 4 populated.');
-        } else {
+        if (!data) {
             const errMsg = response?.error || 'No data returned from Vision API';
             console.error('[Vision] ❌ Empty/invalid response:', response);
             throw new Error(errMsg);
         }
+
+        if (source === 'gemini') {
+            scanState.visionData = data;
+            console.log('[Compliance] Running ComplianceEngine.evaluateCompliance()...');
+            const evalResult = ComplianceEngine.evaluateCompliance(data, scanState.barcodeData, scanState.calibration);
+            console.log('[Compliance] Result:', JSON.stringify(evalResult, null, 2));
+            scanState.complianceReport = evalResult;
+
+            updateAiSourceBadge('gemini');
+            renderAiExtractionCards(data);
+            renderComplianceSummary(evalResult);
+            goToStep(5);
+            console.log('[Vision] ✅ Gemini render complete. Step 5 populated.');
+        } else {
+            // Offline OCR or Manual fallback: show verification form in Step 4
+            if (step4Loading) step4Loading.style.display = 'none';
+            if (step4Verify) step4Verify.style.display = 'block';
+
+            const badge = document.getElementById('step4SourceBadge');
+            if (badge) {
+                if (source === 'tesseract') {
+                    badge.className = 'vision-source-pill source-tesseract';
+                    badge.textContent = 'Offline OCR — Please Verify';
+                } else {
+                    badge.className = 'vision-source-pill source-manual';
+                    badge.textContent = 'Manual Entry Required';
+                }
+            }
+
+            setVerificationFieldValue('editProductName', data.product_name?.value || data.productName || '');
+            setVerificationFieldValue('editManufacturerName', data.manufacturer_name?.value || data.manufacturerName || '');
+            setVerificationFieldValue('editManufacturerAddress', data.manufacturer_address?.value || data.manufacturerAddress || '');
+            setVerificationFieldValue('editPinCode', data.pin_code?.value || data.pinCode || '');
+            setVerificationFieldValue('editNetQuantity', data.net_quantity?.value || data.netQuantity || '');
+            setVerificationFieldValue('editMfgDate', data.mfg_date?.value || data.mfgDate || '');
+            setVerificationFieldValue('editMrp', data.mrp?.value || data.mrpValue || '');
+            setVerificationFieldValue('editConsumerCare', data.consumer_care?.value || data.consumerCare || '');
+            setVerificationFieldValue('editFssai', data.fssai_license?.value || data.fssaiNumber || '');
+
+            scanState.visionData = data;
+            console.log('[Vision] ⚠️ Offline mode active. Awaiting officer verification in Step 4.');
+        }
     } catch (err) {
         console.error('[Vision] ❌ Exception during analysis:', err.message, err.stack);
         alert('Vision analysis error: ' + err.message);
+        goToStep(3);
     } finally {
-        console.log('[Vision] Hiding loading overlay...');
-        hideLoading();
         console.groupEnd();
     }
 }
