@@ -26,8 +26,22 @@ let currentLanguage = null;
  * @param {Object} [options]
  * @returns {Promise<Tesseract.Worker>}
  */
-async function getWorker(lang = "eng+hin", options = {}) {
-    if (cachedWorker && currentLanguage === lang) {
+function getLocalOptions() {
+    const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "";
+    return {
+        workerPath: `${origin}/tessdata/worker.min.js`,
+        corePath: `${origin}/tessdata/tesseract-core-simd-lstm.wasm.js`,
+        langPath: `${origin}/tessdata`,
+        gzip: true
+    };
+}
+
+async function getWorker(lang = "eng", options = {}) {
+    const isOffline = (typeof localStorage !== "undefined" && localStorage.getItem("slm_offline_mode") === "true") ||
+                      (typeof navigator !== "undefined" && !navigator.onLine);
+    const targetLang = isOffline ? "eng" : (options.language || lang || "eng");
+
+    if (cachedWorker && currentLanguage === targetLang) {
         return cachedWorker;
     }
 
@@ -40,19 +54,23 @@ async function getWorker(lang = "eng+hin", options = {}) {
         cachedWorker = null;
     }
 
-    const workerOptions = {};
+    const localOpts = getLocalOptions();
+    const workerOptions = {
+        ...localOpts,
+        ...(options.workerOptions || {})
+    };
     if (options.langPath) {
         workerOptions.langPath = options.langPath;
     }
 
     try {
-        const worker = await createWorker(lang, 1, workerOptions);
+        console.log(`[Tesseract] Initializing offline worker for '${targetLang}'...`);
+        const worker = await createWorker(targetLang, 1, workerOptions);
         cachedWorker = worker;
-        currentLanguage = lang;
+        currentLanguage = targetLang;
         return worker;
     } catch (err) {
-        console.warn(`[Tesseract] Failed to initialize worker with '${lang}', falling back to 'eng':`, err);
-        // Fallback to basic English if bilingual model not cached or fails
+        console.warn(`[Tesseract] Initialization failed with '${targetLang}', retrying with base local 'eng':`, err.message);
         const fallbackWorker = await createWorker("eng", 1, workerOptions);
         cachedWorker = fallbackWorker;
         currentLanguage = "eng";

@@ -215,22 +215,53 @@ async function initCamera() {
     }
 }
 
+let offscreenCanvas = null;
+
 function initBarcodeDetector() {
     if ('BarcodeDetector' in window) {
-        barcodeDetector = new BarcodeDetector({
-            formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'qr_code']
-        });
-        barcodeDetectionLoop();
+        try {
+            barcodeDetector = new BarcodeDetector({
+                formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'qr_code']
+            });
+        } catch (e) {
+            barcodeDetector = null;
+        }
     }
+    if (!offscreenCanvas) {
+        offscreenCanvas = document.createElement('canvas');
+        offscreenCanvas.width = 640;
+        offscreenCanvas.height = 360;
+    }
+    barcodeDetectionLoop();
 }
 
 async function barcodeDetectionLoop() {
     const video = document.getElementById('cameraFeed');
-    if (video && video.readyState === video.HAVE_ENOUGH_DATA && barcodeDetector && isDetectingBarcode && !scanState.barcodeData) {
+    if (video && video.readyState >= 2 && isDetectingBarcode && !scanState.barcodeData) {
         try {
-            const barcodes = await barcodeDetector.detect(video);
-            if (barcodes.length > 0) {
-                const detectedCode = barcodes[0].rawValue;
+            let detectedCode = null;
+
+            // 1. Native BarcodeDetector (if supported)
+            if (barcodeDetector) {
+                try {
+                    const barcodes = await barcodeDetector.detect(video);
+                    if (barcodes && barcodes.length > 0) {
+                        detectedCode = barcodes[0].rawValue;
+                    }
+                } catch(e){}
+            }
+
+            // 2. Pure-JS Scanline Barcode Decoder (runs 100% offline on macOS, Chrome, Edge, Safari)
+            if (!detectedCode && offscreenCanvas && window.BarcodeEngine?.decodeBarcodeFromCanvas) {
+                const ctx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
+                if (ctx) {
+                    ctx.drawImage(video, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
+                    detectedCode = window.BarcodeEngine.decodeBarcodeFromCanvas(offscreenCanvas);
+                }
+            }
+
+            if (detectedCode) {
+                console.log('[Scanner] ✅ Barcode auto-detected:', detectedCode);
                 isDetectingBarcode = false;
                 highlightBarcodeTarget();
                 processBarcode(detectedCode);
@@ -249,13 +280,17 @@ function highlightBarcodeTarget() {
 }
 
 async function processBarcode(code) {
-    showLoading('Validating GS1 barcode across multiple registries...');
+    showLoading('Validating GS1 barcode across registries...');
     const result = await BarcodeEngine.lookupProduct(code);
     scanState.barcodeData = result;
     hideLoading();
 
     renderBarcodeVerification(result);
     goToStep(2);
+}
+
+if (typeof window !== 'undefined') {
+    window.processBarcode = processBarcode;
 }
 
 function renderBarcodeVerification(res) {
@@ -762,15 +797,27 @@ async function runMultimodalAnalysis() {
                 }
             }
 
-            setVerificationFieldValue('editProductName', data.product_name?.value || data.productName || '');
-            setVerificationFieldValue('editManufacturerName', data.manufacturer_name?.value || data.manufacturerName || '');
-            setVerificationFieldValue('editManufacturerAddress', data.manufacturer_address?.value || data.manufacturerAddress || '');
-            setVerificationFieldValue('editPinCode', data.pin_code?.value || data.pinCode || '');
-            setVerificationFieldValue('editNetQuantity', data.net_quantity?.value || data.netQuantity || '');
-            setVerificationFieldValue('editMfgDate', data.mfg_date?.value || data.mfgDate || '');
-            setVerificationFieldValue('editMrp', data.mrp?.value || data.mrpValue || '');
-            setVerificationFieldValue('editConsumerCare', data.consumer_care?.value || data.consumerCare || '');
-            setVerificationFieldValue('editFssai', data.fssai_license?.value || data.fssaiNumber || '');
+            // Use registered barcode metadata from Step 1/2 if OCR missed any field
+            const b = scanState.barcodeData || {};
+            const pName = data.product_name?.value || data.productName || b.productName || '';
+            const mfgName = data.manufacturer_name?.value || data.manufacturerName || b.manufacturer || b.brand || '';
+            const mfgAddr = data.manufacturer_address?.value || data.manufacturerAddress || (data.pin_code?.value ? `PIN: ${data.pin_code.value}` : '');
+            const pinVal = data.pin_code?.value || data.pinCode || '';
+            const netQty = data.net_quantity?.value || data.netQuantity || b.netQuantity || '';
+            const mfgDate = data.mfg_date?.value || data.mfgDate || '';
+            const mrpVal = data.mrp?.value || data.mrpValue || b.mrp || '';
+            const careVal = data.consumer_care?.value || data.consumerCare || '';
+            const fssaiVal = data.fssai_license?.value || data.fssaiNumber || '';
+
+            setVerificationFieldValue('editProductName', pName);
+            setVerificationFieldValue('editManufacturerName', mfgName);
+            setVerificationFieldValue('editManufacturerAddress', mfgAddr);
+            setVerificationFieldValue('editPinCode', pinVal);
+            setVerificationFieldValue('editNetQuantity', netQty);
+            setVerificationFieldValue('editMfgDate', mfgDate);
+            setVerificationFieldValue('editMrp', mrpVal);
+            setVerificationFieldValue('editConsumerCare', careVal);
+            setVerificationFieldValue('editFssai', fssaiVal);
 
             scanState.visionData = data;
             console.log('[Vision] ⚠️ Offline mode active. Awaiting officer verification in Step 4.');
